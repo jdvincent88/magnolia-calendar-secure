@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Magnolia Room • Events Calendar</title>
+
+  <!-- Self-hosted FullCalendar CSS -->
+  <link rel="stylesheet" href="assets/fullcalendar/core/index.global.min.css">
+  <link rel="stylesheet" href="assets/fullcalendar/daygrid/index.global.min.css">
+  <link rel="stylesheet" href="assets/fullcalendar/timegrid/index.global.min.css">
+  <link rel="stylesheet" href="assets/fullcalendar/list/index.global.min.css">
+
+  <style>
+    :root{
+      --mk-bg:#fffaf4; --mk-frame:#7c2d12; --mk-accent:#b45309; --mk-text:#2b2b2b;
+      --mk-font:"Georgia","Times New Roman",serif;
+      --mk-cal-bg:#ffffff; --mk-cal-text:#222222; --mk-header-bg:#7c2d12; --mk-header-text:#fff;
+      --mk-event-bg:#b45309; --mk-event-text:#ffffff; --mk-radius:16px;
+    }
+    html,body{margin:0;padding:0;background:var(--mk-bg);font-family:var(--mk-font);color:var(--mk-text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:10px}
+    .frame{background:var(--mk-cal-bg);border:2px solid var(--mk-frame);border-radius:var(--mk-radius);box-shadow:0 6px 20px rgba(0,0,0,.1);overflow:hidden}
+    .hdr{background:var(--mk-header-bg);color:var(--mk-header-text);padding:10px 14px;border-bottom:2px solid var(--mk-frame);font-weight:600}
+    #calendar{padding:8px; min-height: 620px;}
+    .fc{
+      --fc-page-bg-color:var(--mk-cal-bg);
+      --fc-border-color:var(--mk-frame);
+      --fc-text-color:var(--mk-cal-text);
+      --fc-today-bg-color:rgba(180,83,9,.18);
+      --fc-event-bg-color:var(--mk-event-bg);
+      --fc-event-text-color:var(--mk-event-text);
+      --fc-now-indicator-color:var(--mk-accent);
+      font-family:var(--mk-font);
+    }
+    .fc .fc-toolbar.fc-header-toolbar{padding:8px 12px;background:var(--mk-header-bg);color:var(--mk-header-text);border-bottom:2px solid var(--mk-frame)}
+    .fc .fc-button{background:#5d1f0c;border:1px solid var(--mk-frame);color:var(--mk-header-text);border-radius:10px}
+    .fc .fc-button:hover{filter:brightness(1.08)}
+    .fc .fc-daygrid-event{border-radius:8px;padding:2px 4px}
+    #mk-debug { display:none; font:12px/1.4 monospace; background:#fff3cd; color:#7c2d12; padding:10px; border-top:2px solid var(--mk-frame); white-space:pre-wrap; }
+    .show-debug #mk-debug { display:block; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="frame">
+      <div class="hdr">The Magnolia Room • Events Calendar</div>
+      <div id="calendar"></div>
+      <div id="mk-debug"></div>
+    </div>
+  </div>
+
+  <!-- Self-hosted FullCalendar JS (no external CDNs at runtime) -->
+  <script src="assets/fullcalendar/core/index.global.min.js"></script>
+  <script src="assets/fullcalendar/daygrid/index.global.min.js"></script>
+  <script src="assets/fullcalendar/timegrid/index.global.min.js"></script>
+  <script src="assets/fullcalendar/list/index.global.min.js"></script>
+  <script src="assets/fullcalendar/interaction/index.global.min.js"></script>
+
+  <script>
+    (function(){
+      function showError(msg){
+        const dbg = document.getElementById('mk-debug');
+        document.body.classList.add('show-debug');
+        dbg.textContent = String(msg || 'Unknown error');
+        console.error(msg);
+      }
+
+      function init(){
+        try {
+          const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+            plugins: [ FullCalendarDayGrid, FullCalendarTimeGrid, FullCalendarList, FullCalendarInteraction ],
+            headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
+            initialView: 'dayGridMonth',
+            height: 'auto',
+            nowIndicator: true,
+            events: function(info, success, failure){
+              const url = '/.netlify/functions/get-events'
+                + '?timeMin=' + encodeURIComponent(info.startStr)
+                + '&timeMax=' + encodeURIComponent(info.endStr);
+              fetch(url)
+                .then(r => r.ok ? r.json() : r.text().then(t => Promise.reject(t)))
+                .then(payload => success(payload.events || []))
+                .catch(err => { showError(err); failure(err); });
+            },
+            eventDidMount: info => { if(info.event?.title) info.el.title = info.event.title; }
+          });
+          calendar.render();
+
+          function postHeight(){
+            const h = document.body.scrollHeight;
+            parent.postMessage({ type:'mkCalendarHeight', height:h }, '*');
+          }
+          new ResizeObserver(postHeight).observe(document.body);
+          window.addEventListener('load', postHeight);
+          setTimeout(postHeight, 500);
+        } catch(e) { showError(e); }
+      }
+
+      if (window.FullCalendar && window.FullCalendar.Calendar) init();
+      else window.addEventListener('load', init);
+    })();
+  </script>
+</body>
+</html>
