@@ -68,10 +68,46 @@
 
       function init(){
         try {
+          // Build plugin list only from what's actually loaded
+          const plugins = [];
+          const haveDayGrid      = !!window.FullCalendarDayGrid;
+          const haveTimeGrid     = !!window.FullCalendarTimeGrid;
+          const haveList         = !!window.FullCalendarList;
+          const haveInteraction  = !!window.FullCalendarInteraction;
+
+          if (haveDayGrid)     { plugins.push(window.FullCalendarDayGrid); }
+          else { console.warn("Missing DayGrid: /assets/fullcalendar/daygrid/index.global.min.js"); }
+
+          if (haveTimeGrid)    { plugins.push(window.FullCalendarTimeGrid); }
+          else { console.warn("Missing TimeGrid: /assets/fullcalendar/timegrid/index.global.min.js"); }
+
+          if (haveList)        { plugins.push(window.FullCalendarList); }
+          else { console.warn("Missing List: /assets/fullcalendar/list/index.global.min.js"); }
+
+          if (haveInteraction) { plugins.push(window.FullCalendarInteraction); }
+          else { console.warn("Missing Interaction: /assets/fullcalendar/interaction/index.global.min.js"); }
+
+          if (!plugins.length) {
+            showError('No FullCalendar plugins loaded. Check files under /assets/fullcalendar/.');
+            return;
+          }
+
+          // Only show view buttons for installed plugins
+          const rightViews = [];
+          if (haveDayGrid)  rightViews.push('dayGridMonth');
+          if (haveTimeGrid) rightViews.push('timeGridWeek','timeGridDay');
+          if (haveList)     rightViews.push('listWeek');
+          const right = rightViews.join(',') || 'dayGridMonth';
+
+          const initialView =
+            haveDayGrid ? 'dayGridMonth' :
+            (haveTimeGrid ? 'timeGridWeek' :
+            (haveList ? 'listWeek' : 'dayGridMonth'));
+
           const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-            plugins: [ FullCalendarDayGrid, FullCalendarTimeGrid, FullCalendarList, FullCalendarInteraction ],
-            headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
-            initialView: 'dayGridMonth',
+            plugins,
+            headerToolbar: { left:'prev,next today', center:'title', right },
+            initialView,
             height: 'auto',
             nowIndicator: true,
             events: function(info, success, failure){
@@ -85,8 +121,10 @@
             },
             eventDidMount: info => { if(info.event?.title) info.el.title = info.event.title; }
           });
+
           calendar.render();
 
+          // Auto-resize for iframe embeds
           function postHeight(){
             const h = document.body.scrollHeight;
             parent.postMessage({ type:'mkCalendarHeight', height:h }, '*');
