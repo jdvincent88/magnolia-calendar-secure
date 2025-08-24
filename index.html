@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calendar</title>
+  <title>The Magnolia Room • Events Calendar</title>
 
   <!-- FullCalendar view CSS (core has no CSS in v6) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.15/index.css">
@@ -11,15 +11,98 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.15/index.css">
 
   <style>
-    html, body { margin: 0; padding: 0; font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-    .wrap { max-width: 1100px; margin: 24px auto; padding: 0 12px; }
-    #calendar { background:#fff; border:1px solid #ddd; border-radius:12px; padding:8px; }
+    /* ======= THEME (edit these to match mkmagnoliaroom.com) ======= */
+    :root{
+      --mk-page-bg:   #fffaf4;                 /* creamy parchment */
+      --mk-frame:     #7c2d12;                 /* deep maroon */
+      --mk-header-bg: #7c2d12;                 /* header + toolbar background */
+      --mk-header-tx: #ffffff;                 /* header text */
+      --mk-accent:    #b45309;                 /* vintage gold */
+      --mk-text:      #2b2b2b;                 /* body text */
+      --mk-font:      Georgia, "Times New Roman", serif;
+      --mk-radius:    16px;
+    }
+
+    /* ======= Page + frame ======= */
+    html, body { margin:0; padding:0; background:var(--mk-page-bg); color:var(--mk-text); font-family:var(--mk-font); }
+    .wrap { max-width: 1100px; margin: 28px auto; padding: 0 14px; }
+    .frame { background:#fff; border:2px solid var(--mk-frame); border-radius:var(--mk-radius); box-shadow:0 8px 24px rgba(0,0,0,.12); overflow:hidden; }
+    .hdr {
+      display:flex; align-items:center; justify-content:space-between;
+      background:var(--mk-header-bg); color:var(--mk-header-tx);
+      padding:12px 16px; border-bottom:2px solid var(--mk-frame); letter-spacing:.2px; font-weight:600;
+    }
+    .hdr-title { font-size: clamp(18px, 2.1vw, 22px); }
+    #calendar { padding:10px; }
+
+    /* ======= FullCalendar theming via CSS variables ======= */
+    .fc{
+      --fc-page-bg-color: #fff;
+      --fc-neutral-bg-color: color-mix(in oklab, var(--mk-header-bg) 8%, white);
+      --fc-border-color: var(--mk-frame);
+      --fc-text-color: #222;
+      --fc-today-bg-color: color-mix(in oklab, var(--mk-accent) 18%, white);
+      --fc-event-bg-color: var(--mk-accent);
+      --fc-event-border-color: var(--mk-accent);
+      --fc-event-text-color: #fff;
+      --fc-now-indicator-color: var(--mk-accent);
+
+      /* button colors */
+      --fc-button-text-color: #fff;
+      --fc-button-bg-color: color-mix(in oklab, var(--mk-header-bg) 90%, black);
+      --fc-button-border-color: var(--mk-frame);
+      --fc-button-hover-bg-color: color-mix(in oklab, var(--mk-header-bg) 80%, black);
+      --fc-button-active-bg-color: var(--mk-accent);
+      font-family: var(--mk-font);
+    }
+    .fc .fc-toolbar.fc-header-toolbar{
+      background: var(--mk-header-bg);
+      color: var(--mk-header-tx);
+      border: 1px solid var(--mk-frame);
+      border-radius: 12px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+    }
+    .fc .fc-button{ border-radius: 10px; }
+    .fc .fc-daygrid-event{ border-radius: 8px; padding: 2px 4px; }
+
+    /* ======= Admin UI (modal) ======= */
+    #adminBtn{
+      display:none; position:fixed; bottom:16px; right:16px;
+      padding:10px 14px; border-radius:10px; border:2px solid var(--mk-frame);
+      background: #fff; color:#000; font-weight:600; box-shadow:0 4px 10px rgba(0,0,0,.12);
+    }
+    #adminBtn:hover{ filter:brightness(1.04); }
+    #adminModal{
+      display:none; position:fixed; inset:0; z-index:99999;
+      background:rgba(0,0,0,.45); align-items:center; justify-content:center;
+    }
+    #adminCard{
+      background:#fff; max-width:560px; width:92%;
+      padding:16px; border-radius:16px; border:2px solid var(--mk-frame);
+      box-shadow:0 12px 36px rgba(0,0,0,.25);
+    }
+    #adminCard h3{ margin:0 0 8px; color:var(--mk-frame); }
+    #adminCard label{ display:block; margin:.6rem 0 .2rem }
+    #adminCard input,#adminCard textarea{
+      width:100%; padding:10px; border:1px solid #cfcfcf; border-radius:10px; font-family:var(--mk-font);
+    }
+    #adminCard .row{ display:flex; gap:10px; }
+    #adminCard .row > div{ flex:1; }
+    .btn{ padding:9px 14px; border-radius:10px; border:1px solid var(--mk-frame); font-weight:600; }
+    .btn.primary{ background:var(--mk-accent); color:#fff; border-color:var(--mk-accent); }
+    .btn.ghost{ background:#fff; color:#000; }
+    body.modal-open{ overflow:hidden; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1 style="margin:0 0 12px; font-size:22px;">Events Calendar</h1>
-    <div id="calendar"></div>
+    <div class="frame">
+      <div class="hdr">
+        <div class="hdr-title">The Magnolia Room • Events Calendar</div>
+      </div>
+      <div id="calendar"></div>
+    </div>
   </div>
 
   <!-- FullCalendar globals bundle (auto-registers plugins) -->
@@ -29,46 +112,25 @@
       const el = document.getElementById('calendar');
       const calendar = new FullCalendar.Calendar(el, {
         initialView: 'dayGridMonth',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-        },
+        headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
         height: 'auto'
-        // events: [] // we’ll wire this to your function later
+        // events: function(info, success, failure){ ... } // hook up later
       });
       calendar.render();
+
+      // If you embed via <iframe>, this keeps height tidy:
+      function postHeight(){ parent.postMessage({ type:'mkCalendarHeight', height:document.body.scrollHeight }, '*'); }
+      new ResizeObserver(postHeight).observe(document.body);
+      window.addEventListener('load', postHeight);
+      setTimeout(postHeight, 500);
     });
   </script>
 
   <!-- ===== ADMIN UI (appears only with ?admin=1) ===== -->
-  <style>
-    #adminBtn{
-      display:none; position:fixed; bottom:16px; right:16px;
-      padding:10px 14px; border-radius:8px; border:1px solid #999; background:#fff
-    }
-    #adminModal{
-      display:none; position:fixed; inset:0;
-      background:rgba(0,0,0,.45);
-      align-items:center; justify-content:center;
-      z-index:99999;            /* <-- put modal above FullCalendar */
-    }
-    #adminCard{
-      background:#fff; max-width:520px; width:92%;
-      padding:16px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.2);
-      position:relative; z-index:100000; /* extra safety */
-    }
-    #adminCard label{display:block; margin:.6rem 0 .2rem}
-    #adminCard input,#adminCard textarea{width:100%; padding:8px; border:1px solid #ccc; border-radius:8px}
-    #adminCard .row{display:flex; gap:8px}
-    #adminCard .row > div{flex:1}
-    body.modal-open{ overflow:hidden; }  /* prevent background scroll when open */
-  </style>
-
   <button id="adminBtn">➕ Add Event</button>
   <div id="adminModal">
     <div id="adminCard">
-      <h3 style="margin:0 0 8px">Add Event</h3>
+      <h3>Add Event</h3>
       <label>Title</label>
       <input id="evTitle" placeholder="Event title" />
       <div class="row">
@@ -85,44 +147,79 @@
       <input id="evLoc" placeholder="(optional)" />
       <label>Description</label>
       <textarea id="evDesc" rows="3" placeholder="(optional)"></textarea>
-      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-        <button id="adminCancel">Cancel</button>
-        <button id="adminSave">Save</button>
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+        <button id="adminCancel" class="btn ghost">Cancel</button>
+        <button id="adminSave" class="btn primary">Save</button>
       </div>
       <div id="adminMsg" style="margin-top:8px; font-size:12px; color:#444;"></div>
     </div>
   </div>
 
   <script>
-  (function(){
-    const params = new URLSearchParams(location.search);
-    const isAdmin = params.get('admin') === '1';
-    const btn = document.getElementById('adminBtn');
-    const modal = document.getElementById('adminModal');
-    const msg = document.getElementById('adminMsg');
-  
-    if (isAdmin) btn.style.display = 'block';
-  
-    btn?.addEventListener('click', ()=>{
-      modal.style.display='flex';
-      msg.textContent='';
-      document.body.classList.add('modal-open');
-    });
-    document.getElementById('adminCancel').addEventListener('click', ()=>{
-      modal.style.display='none';
-      document.body.classList.remove('modal-open');
-    });
-    modal.addEventListener('click', (e)=>{
-      if (e.target === modal){
+    (function(){
+      const params = new URLSearchParams(location.search);
+      const isAdmin = params.get('admin') === '1';
+      const btn = document.getElementById('adminBtn');
+      const modal = document.getElementById('adminModal');
+      const msg = document.getElementById('adminMsg');
+
+      if (isAdmin) btn.style.display = 'block';
+
+      btn?.addEventListener('click', ()=>{
+        modal.style.display='flex';
+        msg.textContent='';
+        document.body.classList.add('modal-open');
+      });
+      document.getElementById('adminCancel').addEventListener('click', ()=>{
         modal.style.display='none';
         document.body.classList.remove('modal-open');
-      }
-    });
-  
-    // ... keep your existing Save handler unchanged ...
-  })();
+      });
+      modal.addEventListener('click', (e)=>{
+        if (e.target === modal){
+          modal.style.display='none';
+          document.body.classList.remove('modal-open');
+        }
+      });
+
+      // Save handler (will work after we add the Netlify function + Apps Script)
+      document.getElementById('adminSave').addEventListener('click', async ()=>{
+        msg.textContent = 'Saving...';
+        const title = document.getElementById('evTitle').value.trim();
+        const start = document.getElementById('evStart').value;
+        const end   = document.getElementById('evEnd').value;
+        const location = document.getElementById('evLoc').value.trim();
+        const description = document.getElementById('evDesc').value.trim();
+
+        if (!title || !start || !end) { msg.textContent = 'Title, start and end are required.'; return; }
+
+        // Payload for your server function (to be added in the next step)
+        const payload = {
+          title,
+          start: new Date(start).toISOString(),
+          end:   new Date(end).toISOString(),
+          location,
+          description
+        };
+
+        try {
+          const r = await fetch('/.netlify/functions/create-event', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+          });
+          const data = await r.json().catch(()=> ({}));
+          if (r.ok && data.ok) {
+            msg.textContent = 'Event created ✔';
+            setTimeout(()=>{ modal.style.display='none'; location.reload(); }, 600);
+          } else {
+            msg.textContent = 'Save failed (backend not set up yet): ' + (data.error || r.statusText);
+          }
+        } catch (e) {
+          msg.textContent = 'Network error: ' + String(e);
+        }
+      });
+    })();
   </script>
   <!-- ===== /ADMIN UI ===== -->
-
 </body>
 </html>
