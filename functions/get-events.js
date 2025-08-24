@@ -1,87 +1,67 @@
-// Netlify Function: get-events
-// Uses Node 18's built-in fetch (no node-fetch).
-// Reads GOOGLE_CALENDAR_API_KEY and GOOGLE_CALENDAR_ID from Netlify env vars.
-
+// functions/get-events.js  (Node 18+ has global fetch)
 export async function handler(event) {
-  const API_KEY = process.env.GOOGLE_CALENDAR_API_KEY;
-  const GCAL_ID = process.env.GOOGLE_CALENDAR_ID;
-
-  if (!API_KEY || !GCAL_ID) {
-    return {
-      statusCode: 500,
-      headers: corsHeaders(),
-      body: JSON.stringify({ error: "Server not configured: missing GOOGLE_CALENDAR_API_KEY or GOOGLE_CALENDAR_ID" }),
-    };
-  }
-
-  // Optional range from FullCalendar
-  const qs = new URLSearchParams(event.queryStringParameters || {});
-  const timeMin = qs.get("timeMin");
-  const timeMax = qs.get("timeMax");
-
-  // Defaults: last 6 months to next 12 months
-  const now = new Date();
-  const defaultMin = new Date(now); defaultMin.setMonth(now.getMonth() - 6);
-  const defaultMax = new Date(now); defaultMax.setMonth(now.getMonth() + 12);
-
-  const params = new URLSearchParams({
-    singleEvents: "true",
-    orderBy: "startTime",
-    maxResults: "2500",
-    timeMin: (timeMin ? new Date(timeMin) : defaultMin).toISOString(),
-    timeMax: (timeMax ? new Date(timeMax) : defaultMax).toISOString(),
-    key: API_KEY,
-  });
-
-  const calId = encodeURIComponent(GCAL_ID);
-  const apiUrl = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?${params.toString()}`;
-
   try {
-    const res = await fetch(apiUrl);
-    if (!res.ok) {
-      const text = await res.text();
-      return {
-        statusCode: res.status,
-        headers: corsHeaders(),
-        body: JSON.stringify({ error: "Google API error", status: res.status, details: text }),
-      };
-    }
-    const data = await res.json();
+    const { timeMin, timeMax } = event.queryStringParameters || {};
+    const API_KEY = process.env.GOOGLE_CALENDAR_API_KEY;
+    const CAL_ID  = process.env.GOOGLE_CALENDAR_ID;
 
-    // Convert Google items -> FullCalendar event objects
-    const events = (data.items || []).map((item) => ({
-      id: item.id,
-      title: item.summary || "Untitled",
-      start: item.start?.dateTime || item.start?.date,
-      end: item.end?.dateTime || item.end?.date,
-      location: item.location || undefined,
-      url: item.htmlLink || undefined,
-      description: (item.description || "").slice(0, 1000),
-      allDay: Boolean(item.start?.date && !item.start?.dateTime),
-    }));
+    if (!API_KEY || !CAL_ID) {
+      return { statusCode: 500, body: JSON.stringify({ error: 'Missing env vars' }) };
+    }
+
+    const url = new URL(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CAL_ID)}/events`);
+    url.searchParams.set('key', API_KEY);
+    url.searchParams.set('singleEvents', 'true');        // expand recurring
+    url.searchParams.set('orderBy', 'startTime');
+    url.searchParams.set('maxResults', '2500');
+    if (timeMin) url.searchParams.set('timeMin', timeMin);
+    if (timeMax) url.searchParams.set('timeMax', timeMax);
+    // limit payload size
+    url.searchParams.set('fields', 'items(id,htmlLink,summary,description,location,start,end,attachments),timeZone');
+
+    const resp = await fetch(url.toString());
+    const text = await resp.text();
+    if (!resp.ok) {
+      return { statusCode: resp.status, body: JSON.stringify({ error: 'Google API error', status: resp.status, details: text }) };
+    }
+    const data = JSON.parse(text);
+
+    const events = (data.items || []).map(item => {
+      const allDay = !!item.start?.date;
+      const start  = item.start?.dateTime || item.start?.date;
+      const end    = item.end?.dateTime   || item.end?.date;
+
+      // Try to surface a flyer URL:
+      let flyer = null;
+      const desc = item.description || '';
+      const urlMatches = desc.match(/https?:\/\/[^\s)'"<>]+/g);
+      if (urlMatches) {
+        const candidate = urlMatches.find(u => /\.(png|jpe?g|webp|gif|pdf)(\?|$)/i.test(u)) || urlMatches[0];
+        if (candidate) flyer = candidate;
+      }
+      if (item.attachments && item.attachments.length && item.attachments[0].fileUrl) {
+        flyer = item.attachments[0].fileUrl; // may require sharing permissions if Drive
+      }
+
+      return {
+        id: item.id,
+        title: item.summary || '(no title)',
+        start, end, allDay,
+        url: item.htmlLink, // opens the Google event if user clicks the link in the details
+        extendedProps: {
+          location: item.location || '',
+          description: item.description || '',
+          flyer
+        }
+      };
+    });
 
     return {
       statusCode: 200,
-      headers: {
-        ...corsHeaders(),
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=300, s-maxage=300",
-      },
-      body: JSON.stringify({ events }),
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60, s-maxage=60' },
+      body: JSON.stringify({ events })
     };
-  } catch (err) {
-    return {
-      statusCode: 500,
-      headers: corsHeaders(),
-      body: JSON.stringify({ error: "Server fetch failed", details: String(err) }),
-    };
+  } catch (e) {
+    return { statusCode: 500, body: JSON.stringify({ error: String(e) }) };
   }
-}
-
-function corsHeaders() {
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
 }
