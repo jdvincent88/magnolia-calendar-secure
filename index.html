@@ -138,6 +138,25 @@
       });
 
       calendar.render();
+      
+      // Keep a quick index of events by id once they’re loaded
+      let eventIndex = new Map();
+      calendar.on('eventsSet', (events) => {
+        eventIndex.clear();
+        events.forEach(evt => eventIndex.set(evt.id, evt));
+        // open by hash if present
+        const m = location.hash.match(/^#e=([^&]+)/);
+        if (m && eventIndex.has(decodeURIComponent(m[1]))) {
+          openEventModal(eventIndex.get(decodeURIComponent(m[1])));
+        }
+      });
+      
+      // When an event is clicked, update the URL hash
+      const originalClick = calendar.getOption('eventClick');
+      calendar.setOption('eventClick', function(info){
+        history.replaceState(null, '', '#e=' + encodeURIComponent(info.event.id));
+        originalClick(info); // open popup as before
+      });
 
       /* ===== MOBILE DEFAULT VIEW SNIPPET =====
          Phones show listWeek; larger screens show month.
