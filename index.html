@@ -5,21 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Magnolia Room • Events Calendar</title>
 
+  <!-- Playfair Display font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+
   <!-- FullCalendar view CSS (core has no CSS in v6) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.15/index.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.15/index.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.15/index.css">
 
   <style>
-    /* ======= THEME (edit these to match mkmagnoliaroom.com) ======= */
+    /* ======= THEME (tweak these to match mkmagnoliaroom.com) ======= */
     :root{
-      --mk-page-bg:   #fffaf4;                 /* creamy parchment */
-      --mk-frame:     #7c2d12;                 /* deep maroon */
-      --mk-header-bg: #7c2d12;                 /* header + toolbar background */
+      --mk-page-bg:   #fff8f3;                 /* soft parchment */
+      --mk-frame:     #6B2B16;                 /* deep brown/maroon for borders */
+      --mk-header-bg: #6B2B16;                 /* header + toolbar background */
       --mk-header-tx: #ffffff;                 /* header text */
-      --mk-accent:    #b45309;                 /* vintage gold */
+      --mk-accent:    #B98531;                 /* warm gold accent */
       --mk-text:      #2b2b2b;                 /* body text */
-      --mk-font:      Georgia, "Times New Roman", serif;
+      --mk-font:      "Playfair Display", Georgia, "Times New Roman", serif;
       --mk-radius:    16px;
     }
 
@@ -35,7 +40,7 @@
     .hdr-title { font-size: clamp(18px, 2.1vw, 22px); }
     #calendar { padding:10px; }
 
-    /* ======= FullCalendar theming via CSS variables ======= */
+    /* ======= FullCalendar theming ======= */
     .fc{
       --fc-page-bg-color: #fff;
       --fc-neutral-bg-color: color-mix(in oklab, var(--mk-header-bg) 8%, white);
@@ -47,7 +52,6 @@
       --fc-event-text-color: #fff;
       --fc-now-indicator-color: var(--mk-accent);
 
-      /* button colors */
       --fc-button-text-color: #fff;
       --fc-button-bg-color: color-mix(in oklab, var(--mk-header-bg) 90%, black);
       --fc-button-border-color: var(--mk-frame);
@@ -71,6 +75,7 @@
       display:none; position:fixed; bottom:16px; right:16px;
       padding:10px 14px; border-radius:10px; border:2px solid var(--mk-frame);
       background: #fff; color:#000; font-weight:600; box-shadow:0 4px 10px rgba(0,0,0,.12);
+      font-family: var(--mk-font);
     }
     #adminBtn:hover{ filter:brightness(1.04); }
     #adminModal{
@@ -81,6 +86,7 @@
       background:#fff; max-width:560px; width:92%;
       padding:16px; border-radius:16px; border:2px solid var(--mk-frame);
       box-shadow:0 12px 36px rgba(0,0,0,.25);
+      font-family: var(--mk-font);
     }
     #adminCard h3{ margin:0 0 8px; color:var(--mk-frame); }
     #adminCard label{ display:block; margin:.6rem 0 .2rem }
@@ -89,7 +95,7 @@
     }
     #adminCard .row{ display:flex; gap:10px; }
     #adminCard .row > div{ flex:1; }
-    .btn{ padding:9px 14px; border-radius:10px; border:1px solid var(--mk-frame); font-weight:600; }
+    .btn{ padding:9px 14px; border-radius:10px; border:1px solid var(--mk-frame); font-weight:600; font-family: var(--mk-font); }
     .btn.primary{ background:var(--mk-accent); color:#fff; border-color:var(--mk-accent); }
     .btn.ghost{ background:#fff; color:#000; }
     body.modal-open{ overflow:hidden; }
@@ -114,11 +120,9 @@
         initialView: 'dayGridMonth',
         headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
         height: 'auto'
-        // events: function(info, success, failure){ ... } // hook up later
       });
       calendar.render();
 
-      // If you embed via <iframe>, this keeps height tidy:
       function postHeight(){ parent.postMessage({ type:'mkCalendarHeight', height:document.body.scrollHeight }, '*'); }
       new ResizeObserver(postHeight).observe(document.body);
       window.addEventListener('load', postHeight);
@@ -181,42 +185,11 @@
         }
       });
 
-      // Save handler (will work after we add the Netlify function + Apps Script)
+      // (Save will work once the Netlify function + Apps Script are in place)
       document.getElementById('adminSave').addEventListener('click', async ()=>{
         msg.textContent = 'Saving...';
-        const title = document.getElementById('evTitle').value.trim();
-        const start = document.getElementById('evStart').value;
-        const end   = document.getElementById('evEnd').value;
-        const location = document.getElementById('evLoc').value.trim();
-        const description = document.getElementById('evDesc').value.trim();
-
-        if (!title || !start || !end) { msg.textContent = 'Title, start and end are required.'; return; }
-
-        // Payload for your server function (to be added in the next step)
-        const payload = {
-          title,
-          start: new Date(start).toISOString(),
-          end:   new Date(end).toISOString(),
-          location,
-          description
-        };
-
-        try {
-          const r = await fetch('/.netlify/functions/create-event', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify(payload)
-          });
-          const data = await r.json().catch(()=> ({}));
-          if (r.ok && data.ok) {
-            msg.textContent = 'Event created ✔';
-            setTimeout(()=>{ modal.style.display='none'; location.reload(); }, 600);
-          } else {
-            msg.textContent = 'Save failed (backend not set up yet): ' + (data.error || r.statusText);
-          }
-        } catch (e) {
-          msg.textContent = 'Network error: ' + String(e);
-        }
+        // placeholder — backend wiring happens later
+        msg.textContent = 'Save failed (backend not set up yet).';
       });
     })();
   </script>
