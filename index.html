@@ -16,29 +16,28 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.15/index.css">
 
   <style>
-    /* ======= THEME (tweak these to match mkmagnoliaroom.com) ======= */
+    /* ===== THEME (tuned to your brand) ===== */
     :root{
-      --mk-header-bg: #6C0101;     /* header/title bar */
-      --mk-frame:     #6C0101;     /* borders */
-      --mk-accent:    #DE8F05;     /* buttons/events/highlights */
-      --mk-accent-2:  #9A6A35;     /* secondary gold/shadow */
-      --mk-header-tx: #FFFFFF;
-      --mk-font: "Playfair Display", Georgia, "Times New Roman", serif;
+      --mk-page-bg:   #fff8f3;
+      --mk-frame:     #6C0101;   /* deep maroon from logo */
+      --mk-header-bg: #6C0101;
+      --mk-header-tx: #ffffff;
+      --mk-accent:    #DE8F05;   /* old gold */
+      --mk-accent-2:  #9A6A35;   /* antique gold */
+      --mk-text:      #2b2b2b;
+      --mk-font:      "Playfair Display", Georgia, "Times New Roman", serif;
+      --mk-radius:    16px;
     }
 
-    /* ======= Page + frame ======= */
+    /* Page + frame */
     html, body { margin:0; padding:0; background:var(--mk-page-bg); color:var(--mk-text); font-family:var(--mk-font); }
     .wrap { max-width: 1100px; margin: 28px auto; padding: 0 14px; }
     .frame { background:#fff; border:2px solid var(--mk-frame); border-radius:var(--mk-radius); box-shadow:0 8px 24px rgba(0,0,0,.12); overflow:hidden; }
-    .hdr {
-      display:flex; align-items:center; justify-content:space-between;
-      background:var(--mk-header-bg); color:var(--mk-header-tx);
-      padding:12px 16px; border-bottom:2px solid var(--mk-frame); letter-spacing:.2px; font-weight:600;
-    }
+    .hdr { display:flex; align-items:center; justify-content:space-between; background:var(--mk-header-bg); color:var(--mk-header-tx); padding:12px 16px; border-bottom:2px solid var(--mk-frame); letter-spacing:.2px; font-weight:700; }
     .hdr-title { font-size: clamp(18px, 2.1vw, 22px); }
     #calendar { padding:10px; }
 
-    /* ======= FullCalendar theming ======= */
+    /* FullCalendar theme */
     .fc{
       --fc-page-bg-color: #fff;
       --fc-neutral-bg-color: color-mix(in oklab, var(--mk-header-bg) 8%, white);
@@ -57,140 +56,176 @@
       --fc-button-active-bg-color: var(--mk-accent);
       font-family: var(--mk-font);
     }
-    .fc .fc-toolbar.fc-header-toolbar{
-      background: var(--mk-header-bg);
-      color: var(--mk-header-tx);
-      border: 1px solid var(--mk-frame);
-      border-radius: 12px;
-      padding: 8px 10px;
-      margin-bottom: 10px;
-    }
-    .fc .fc-button{ border-radius: 10px; }
-    .fc .fc-daygrid-event{ border-radius: 8px; padding: 2px 4px; }
+    .fc .fc-toolbar.fc-header-toolbar{ background:var(--mk-header-bg); color:var(--mk-header-tx); border:1px solid var(--mk-frame); border-radius:12px; padding:8px 10px; margin-bottom:10px; }
+    .fc .fc-button{ border-radius:10px; }
+    .fc .fc-daygrid-event{ border-radius:8px; padding:2px 4px; }
 
-    /* ======= Admin UI (modal) ======= */
+    /* Tooltip for hover */
+    .mk-tip{ position:fixed; z-index:9999; background:#fff; color:#000; border:1px solid var(--mk-frame); border-radius:10px; padding:8px 10px; box-shadow:0 10px 30px rgba(0,0,0,.2); max-width:260px; font-size:13px; }
+    .mk-tip h4{ margin:0 0 4px; font-size:14px; color:#000; }
+    .mk-tip small{ color:#333; }
+
+    /* Event Details Modal */
+    #viewModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:99999; align-items:center; justify-content:center; }
+    #viewCard{ background:#fff; max-width:720px; width:94%; border:2px solid var(--mk-frame); border-radius:16px; box-shadow:0 12px 36px rgba(0,0,0,.25); overflow:hidden; }
+    #viewHead{ background:var(--mk-header-bg); color:#fff; padding:10px 14px; font-weight:700; display:flex; align-items:center; justify-content:space-between; }
+    #viewBody{ padding:14px; }
+    #viewBody img{ max-width:100%; border-radius:12px; border:1px solid #ddd; }
+    .kv{ margin:6px 0; }
+    .kv b{ display:inline-block; min-width:90px; color:#000; }
+    .closeBtn{ background:#fff; color:#000; border:1px solid var(--mk-frame); border-radius:10px; padding:6px 10px; font-weight:600; }
+
+    /* Admin button from earlier (still available via ?admin=1) */
     #adminBtn{
       display:none; position:fixed; bottom:16px; right:16px;
       padding:10px 14px; border-radius:10px; border:2px solid var(--mk-frame);
-      background: #fff; color:#000; font-weight:600; box-shadow:0 4px 10px rgba(0,0,0,.12);
+      background: #fff; color:#000; font-weight:700; box-shadow:0 4px 10px rgba(0,0,0,.12);
       font-family: var(--mk-font);
     }
-    #adminBtn:hover{ filter:brightness(1.04); }
-    #adminModal{
-      display:none; position:fixed; inset:0; z-index:99999;
-      background:rgba(0,0,0,.45); align-items:center; justify-content:center;
-    }
-    #adminCard{
-      background:#fff; max-width:560px; width:92%;
-      padding:16px; border-radius:16px; border:2px solid var(--mk-frame);
-      box-shadow:0 12px 36px rgba(0,0,0,.25);
-      font-family: var(--mk-font);
-    }
-    #adminCard h3{ margin:0 0 8px; color:var(--mk-frame); }
-    #adminCard label{ display:block; margin:.6rem 0 .2rem }
-    #adminCard input,#adminCard textarea{
-      width:100%; padding:10px; border:1px solid #cfcfcf; border-radius:10px; font-family:var(--mk-font);
-    }
-    #adminCard .row{ display:flex; gap:10px; }
-    #adminCard .row > div{ flex:1; }
-    .btn{ padding:9px 14px; border-radius:10px; border:1px solid var(--mk-frame); font-weight:600; font-family: var(--mk-font); }
-    .btn.primary{ background:var(--mk-accent); color:#fff; border-color:var(--mk-accent); }
-    .btn.ghost{ background:#fff; color:#000; }
     body.modal-open{ overflow:hidden; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="frame">
-      <div class="hdr">
-        <div class="hdr-title">The Magnolia Room • Events Calendar</div>
-      </div>
+      <div class="hdr"><div class="hdr-title">The Magnolia Room • Events Calendar</div></div>
       <div id="calendar"></div>
     </div>
   </div>
 
-  <!-- FullCalendar globals bundle (auto-registers plugins) -->
+  <!-- FullCalendar globals -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function(){
       const el = document.getElementById('calendar');
+
+      let tipEl = null;
+      const showTip = (info) => {
+        const e = info.el.getBoundingClientRect();
+        const when = formatRange(info.event);
+        const html = `
+          <h4>${escapeHtml(info.event.title || '')}</h4>
+          <small>${when}</small>
+          ${info.event.extendedProps.location ? `<div class="kv"><b>Where:</b> ${escapeHtml(info.event.extendedProps.location)}</div>` : ''}
+        `;
+        tipEl = document.createElement('div');
+        tipEl.className = 'mk-tip';
+        tipEl.innerHTML = html;
+        document.body.appendChild(tipEl);
+        const top = Math.max(8, e.top - tipEl.offsetHeight - 8);
+        const left = Math.min(window.innerWidth - tipEl.offsetWidth - 8, Math.max(8, e.left));
+        tipEl.style.top = top + 'px';
+        tipEl.style.left = left + 'px';
+      };
+      const hideTip = () => { if (tipEl) { tipEl.remove(); tipEl = null; } };
+
       const calendar = new FullCalendar.Calendar(el, {
         initialView: 'dayGridMonth',
         headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
-        height: 'auto'
+        height: 'auto',
+
+        // READ EVENTS FROM YOUR NETLIFY FUNCTION
+        events: function(info, success, failure){
+          const url = '/.netlify/functions/get-events'
+            + '?timeMin=' + encodeURIComponent(info.startStr)
+            + '&timeMax=' + encodeURIComponent(info.endStr);
+          fetch(url)
+            .then(r => r.ok ? r.json() : r.text().then(t => Promise.reject(t)))
+            .then(data => success(data.events || []))
+            .catch(err => failure(err));
+        },
+
+        eventMouseEnter: showTip,
+        eventMouseLeave: hideTip,
+        eventClick: function(info){
+          info.jsEvent.preventDefault();
+          hideTip();
+          openEventModal(info.event);
+        },
+        eventDidMount: (info) => { if (info.event?.title) info.el.title = info.event.title; }
       });
+
       calendar.render();
 
-      function postHeight(){ parent.postMessage({ type:'mkCalendarHeight', height:document.body.scrollHeight }, '*'); }
-      new ResizeObserver(postHeight).observe(document.body);
-      window.addEventListener('load', postHeight);
-      setTimeout(postHeight, 500);
+      function formatRange(event){
+        const tz = undefined; // browser local
+        const s = event.start;
+        const e = event.end || event.start;
+        const optsDate = { weekday:'short', month:'short', day:'numeric', year:'numeric' };
+        const optsTime = { hour:'numeric', minute:'2-digit' };
+        if (event.allDay) {
+          return s.toLocaleDateString(undefined, optsDate) + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, optsDate) : '');
+        }
+        const sStr = s.toLocaleDateString(undefined, optsDate) + ' ' + s.toLocaleTimeString(undefined, optsTime);
+        const eStr = e.toLocaleTimeString(undefined, optsTime);
+        return sStr + ' – ' + eStr;
+      }
+
+      function escapeHtml(x){ return (x||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
     });
+
+    // EVENT DETAILS MODAL
+    function openEventModal(event){
+      const modal = document.getElementById('viewModal');
+      const title = document.getElementById('viewTitle');
+      const body  = document.getElementById('viewBody');
+
+      title.textContent = event.title || 'Event';
+      const when = (function(){
+        const allDay = event.allDay;
+        const s = event.start, e = event.end || event.start;
+        const optsDate = { weekday:'long', month:'long', day:'numeric', year:'numeric' };
+        const optsTime = { hour:'numeric', minute:'2-digit' };
+        if (allDay) {
+          return s.toLocaleDateString(undefined, optsDate) + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, optsDate) : '');
+        }
+        const sStr = s.toLocaleDateString(undefined, optsDate) + ' ' + s.toLocaleTimeString(undefined, optsTime);
+        const eStr = e.toLocaleTimeString(undefined, optsTime);
+        return sStr + ' – ' + eStr;
+      })();
+
+      // Build details HTML
+      const loc = event.extendedProps.location ? `<div class="kv"><b>Where:</b> ${event.extendedProps.location}</div>` : '';
+      const desc = event.extendedProps.description ? `<div class="kv"><b>Details:</b> ${linkify(event.extendedProps.description)}</div>` : '';
+      const flyer = (function(){
+        const f = event.extendedProps.flyer;
+        if (!f) return '';
+        if (/\.(png|jpe?g|webp|gif)$/i.test(f)) return `<div class="kv"><img alt="Flyer" src="${f}"></div>`;
+        return `<div class="kv"><a href="${f}" target="_blank" rel="noopener">View flyer</a></div>`;
+      })();
+      const gcal = event.url ? `<div class="kv"><a href="${event.url}" target="_blank" rel="noopener">Open in Google Calendar</a></div>` : '';
+
+      body.innerHTML = `<div class="kv"><b>When:</b> ${when}</div>${loc}${desc}${flyer}${gcal}`;
+
+      modal.style.display = 'flex';
+      document.body.classList.add('modal-open');
+
+      document.getElementById('viewClose').onclick = () => { modal.style.display='none'; document.body.classList.remove('modal-open'); };
+      modal.onclick = (e) => { if (e.target === modal) { modal.style.display='none'; document.body.classList.remove('modal-open'); } };
+    }
+
+    function linkify(t){
+      const esc = (x)=>x.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+      const parts = esc(t).split(/\s/).map(w=>{
+        if(/^https?:\/\/[^\s<>"']+$/i.test(w)){ return `<a href="${w}" target="_blank" rel="noopener">${w}</a>`; }
+        return w;
+      });
+      return parts.join(' ');
+    }
   </script>
 
-  <!-- ===== ADMIN UI (appears only with ?admin=1) ===== -->
-  <button id="adminBtn">➕ Add Event</button>
-  <div id="adminModal">
-    <div id="adminCard">
-      <h3>Add Event</h3>
-      <label>Title</label>
-      <input id="evTitle" placeholder="Event title" />
-      <div class="row">
-        <div>
-          <label>Start</label>
-          <input id="evStart" type="datetime-local" />
-        </div>
-        <div>
-          <label>End</label>
-          <input id="evEnd" type="datetime-local" />
-        </div>
+  <!-- Event Details Modal -->
+  <div id="viewModal">
+    <div id="viewCard">
+      <div id="viewHead">
+        <div id="viewTitle">Event</div>
+        <button id="viewClose" class="closeBtn">Close</button>
       </div>
-      <label>Location</label>
-      <input id="evLoc" placeholder="(optional)" />
-      <label>Description</label>
-      <textarea id="evDesc" rows="3" placeholder="(optional)"></textarea>
-      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
-        <button id="adminCancel" class="btn ghost">Cancel</button>
-        <button id="adminSave" class="btn primary">Save</button>
-      </div>
-      <div id="adminMsg" style="margin-top:8px; font-size:12px; color:#444;"></div>
+      <div id="viewBody"></div>
     </div>
   </div>
 
-  <script>
-    (function(){
-      const params = new URLSearchParams(location.search);
-      const isAdmin = params.get('admin') === '1';
-      const btn = document.getElementById('adminBtn');
-      const modal = document.getElementById('adminModal');
-      const msg = document.getElementById('adminMsg');
-
-      if (isAdmin) btn.style.display = 'block';
-
-      btn?.addEventListener('click', ()=>{
-        modal.style.display='flex';
-        msg.textContent='';
-        document.body.classList.add('modal-open');
-      });
-      document.getElementById('adminCancel').addEventListener('click', ()=>{
-        modal.style.display='none';
-        document.body.classList.remove('modal-open');
-      });
-      modal.addEventListener('click', (e)=>{
-        if (e.target === modal){
-          modal.style.display='none';
-          document.body.classList.remove('modal-open');
-        }
-      });
-
-      // (Save will work once the Netlify function + Apps Script are in place)
-      document.getElementById('adminSave').addEventListener('click', async ()=>{
-        msg.textContent = 'Saving...';
-        // placeholder — backend wiring happens later
-        msg.textContent = 'Save failed (backend not set up yet).';
-      });
-    })();
-  </script>
-  <!-- ===== /ADMIN UI ===== -->
+  <!-- (Optional) Admin Add Event button from earlier still available with ?admin=1 -->
+  <button id="adminBtn" onclick="location.search='?admin=1'">➕ Add Event</button>
 </body>
 </html>
