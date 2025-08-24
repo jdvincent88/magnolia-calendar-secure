@@ -43,13 +43,26 @@
 
   <!-- ===== ADMIN UI (appears only with ?admin=1) ===== -->
   <style>
-    #adminBtn{display:none;position:fixed;bottom:16px;right:16px;padding:10px 14px;border-radius:8px;border:1px solid #999;background:#fff}
-    #adminModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center}
-    #adminCard{background:#fff;max-width:520px;width:92%;padding:16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
-    #adminCard label{display:block;margin:.6rem 0 .2rem}
-    #adminCard input,#adminCard textarea{width:100%;padding:8px;border:1px solid #ccc;border-radius:8px}
-    #adminCard .row{display:flex;gap:8px}
+    #adminBtn{
+      display:none; position:fixed; bottom:16px; right:16px;
+      padding:10px 14px; border-radius:8px; border:1px solid #999; background:#fff
+    }
+    #adminModal{
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,.45);
+      align-items:center; justify-content:center;
+      z-index:99999;            /* <-- put modal above FullCalendar */
+    }
+    #adminCard{
+      background:#fff; max-width:520px; width:92%;
+      padding:16px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.2);
+      position:relative; z-index:100000; /* extra safety */
+    }
+    #adminCard label{display:block; margin:.6rem 0 .2rem}
+    #adminCard input,#adminCard textarea{width:100%; padding:8px; border:1px solid #ccc; border-radius:8px}
+    #adminCard .row{display:flex; gap:8px}
     #adminCard .row > div{flex:1}
+    body.modal-open{ overflow:hidden; }  /* prevent background scroll when open */
   </style>
 
   <button id="adminBtn">➕ Add Event</button>
@@ -81,55 +94,33 @@
   </div>
 
   <script>
-    (function(){
-      const params = new URLSearchParams(location.search);
-      const isAdmin = params.get('admin') === '1';
-      const btn = document.getElementById('adminBtn');
-      const modal = document.getElementById('adminModal');
-      const msg = document.getElementById('adminMsg');
-
-      if (isAdmin) btn.style.display = 'block';
-
-      btn?.addEventListener('click', ()=>{ modal.style.display='flex'; msg.textContent=''; });
-      document.getElementById('adminCancel').addEventListener('click', ()=>{ modal.style.display='none'; });
-
-      document.getElementById('adminSave').addEventListener('click', async ()=>{
-        msg.textContent = 'Saving...';
-        const title = document.getElementById('evTitle').value.trim();
-        const start = document.getElementById('evStart').value;
-        const end   = document.getElementById('evEnd').value;
-        const location = document.getElementById('evLoc').value.trim();
-        const description = document.getElementById('evDesc').value.trim();
-
-        if (!title || !start || !end) { msg.textContent = 'Title, start and end are required.'; return; }
-
-        // Convert local time to ISO. This will hit your Netlify function once we add it.
-        const payload = {
-          title,
-          start: new Date(start).toISOString(),
-          end:   new Date(end).toISOString(),
-          location,
-          description
-        };
-
-        try {
-          const r = await fetch('/.netlify/functions/create-event', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify(payload)
-          });
-          const data = await r.json().catch(()=> ({}));
-          if (r.ok && data.ok) {
-            msg.textContent = 'Event created ✔';
-            setTimeout(()=>{ modal.style.display='none'; location.reload(); }, 600);
-          } else {
-            msg.textContent = 'Save failed (backend not set up yet): ' + (data.error || r.statusText);
-          }
-        } catch (e) {
-          msg.textContent = 'Network error: ' + String(e);
-        }
-      });
-    })();
+  (function(){
+    const params = new URLSearchParams(location.search);
+    const isAdmin = params.get('admin') === '1';
+    const btn = document.getElementById('adminBtn');
+    const modal = document.getElementById('adminModal');
+    const msg = document.getElementById('adminMsg');
+  
+    if (isAdmin) btn.style.display = 'block';
+  
+    btn?.addEventListener('click', ()=>{
+      modal.style.display='flex';
+      msg.textContent='';
+      document.body.classList.add('modal-open');
+    });
+    document.getElementById('adminCancel').addEventListener('click', ()=>{
+      modal.style.display='none';
+      document.body.classList.remove('modal-open');
+    });
+    modal.addEventListener('click', (e)=>{
+      if (e.target === modal){
+        modal.style.display='none';
+        document.body.classList.remove('modal-open');
+      }
+    });
+  
+    // ... keep your existing Save handler unchanged ...
+  })();
   </script>
   <!-- ===== /ADMIN UI ===== -->
 
