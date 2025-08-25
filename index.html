@@ -68,7 +68,7 @@
     /* Event details modal */
     #viewModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:99999; align-items:center; justify-content:center; }
     #viewCard{ background:#fff; max-width:720px; width:94%; border:2px solid var(--mk-frame); border-radius:16px; box-shadow:0 12px 36px rgba(0,0,0,.25); overflow:hidden; }
-    #viewHead{ background:var(--mk-header-bg); color:#fff; padding:10px 14px; font-weight:700; display:flex; align-items:center; justify-content:space-between; }
+    #viewHead{ background:var(--mk-header-bg); color:#fff; padding:10px 14px; font-weight:700; display:flex; align-items:center; justify-content:space-between; <button id="viewIcs" class="closeBtn">Add to Calendar</button>; }
     #viewBody{ padding:14px; }
     #viewBody img{ max-width:100%; border-radius:12px; border:1px solid #ddd; }
     .kv{ margin:6px 0; }
@@ -84,13 +84,11 @@
     </div>
   </div>
 
-  <!-- FullCalendar (globals build) -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function(){
+    document.addEventListener('DOMContentLoaded', function () {
       const el = document.getElementById('calendar');
-
-      // Simple hover tooltip
+  
+      // ---- Hover tooltip helpers ----
       let tipEl = null;
       const showTip = (info) => {
         const rect = info.el.getBoundingClientRect();
@@ -110,14 +108,15 @@
         tipEl.style.left = left + 'px';
       };
       const hideTip = () => { if (tipEl) { tipEl.remove(); tipEl = null; } };
-
+  
+      // ---- FullCalendar init ----
       const calendar = new FullCalendar.Calendar(el, {
         initialView: 'dayGridMonth',
-        headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
         height: 'auto',
-
+  
         // Read events from your Netlify Function
-        events: function(info, success, failure){
+        events: function (info, success, failure) {
           const url = '/.netlify/functions/get-events'
             + '?timeMin=' + encodeURIComponent(info.startStr)
             + '&timeMax=' + encodeURIComponent(info.endStr);
@@ -126,90 +125,74 @@
             .then(data => success(data.events || []))
             .catch(err => failure(err));
         },
-
+  
         eventMouseEnter: showTip,
         eventMouseLeave: hideTip,
-        eventClick: function(info){
+        eventClick: function (info) {
           info.jsEvent.preventDefault();
           hideTip();
-          openEventModal(info.event);
+          openEventModal(info.event); // <--- HERE is where we call it
         },
         eventDidMount: (info) => { if (info.event?.title) info.el.title = info.event.title; }
       });
-
+  
       calendar.render();
-      
-      // Keep a quick index of events by id once they’re loaded
-      let eventIndex = new Map();
-      calendar.on('eventsSet', (events) => {
-        eventIndex.clear();
-        events.forEach(evt => eventIndex.set(evt.id, evt));
-        // open by hash if present
-        const m = location.hash.match(/^#e=([^&]+)/);
-        if (m && eventIndex.has(decodeURIComponent(m[1]))) {
-          openEventModal(eventIndex.get(decodeURIComponent(m[1])));
-        }
-      });
-      
-      // When an event is clicked, update the URL hash
-      const originalClick = calendar.getOption('eventClick');
-      calendar.setOption('eventClick', function(info){
-        history.replaceState(null, '', '#e=' + encodeURIComponent(info.event.id));
-        originalClick(info); // open popup as before
-      });
-
-      /* ===== MOBILE DEFAULT VIEW SNIPPET =====
-         Phones show listWeek; larger screens show month.
-      */
+  
+      // ---- Mobile default view (list on phones) ----
       const setViewForWidth = () => {
         const desired = (window.innerWidth < 640 ? 'listWeek' : 'dayGridMonth');
         if (calendar.view.type !== desired) calendar.changeView(desired);
       };
       setViewForWidth();
       window.addEventListener('resize', setViewForWidth);
-
-      // Keep iframe height correct when embedded
-      function postHeight(){ parent.postMessage({ type:'mkCalendarHeight', height:document.body.scrollHeight }, '*'); }
+  
+      // ---- Keep iframe height correct when embedded ----
+      function postHeight() { parent.postMessage({ type: 'mkCalendarHeight', height: document.body.scrollHeight }, '*'); }
       new ResizeObserver(postHeight).observe(document.body);
       window.addEventListener('load', postHeight);
       setTimeout(postHeight, 500);
-
-      // helpers
-      function formatRange(event){
+  
+      // ---- Helpers used above ----
+      function formatRange(event) {
         const s = event.start, e = event.end || event.start;
-        const dOpts = { weekday:'short', month:'short', day:'numeric', year:'numeric' };
-        const tOpts = { hour:'numeric', minute:'2-digit' };
+        const dOpts = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+        const tOpts = { hour: 'numeric', minute: '2-digit' };
         if (event.allDay) {
-          return s.toLocaleDateString(undefined, dOpts) + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, dOpts) : '');
+          return s.toLocaleDateString(undefined, dOpts)
+            + (e && e > s ? ' – ' + new Date(e.getTime() - 1).toLocaleDateString(undefined, dOpts) : '');
         }
         const sStr = s.toLocaleDateString(undefined, dOpts) + ' ' + s.toLocaleTimeString(undefined, tOpts);
         const eStr = e.toLocaleTimeString(undefined, tOpts);
         return sStr + ' – ' + eStr;
       }
-      function escapeHtml(x){ return (x||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+      function escapeHtml(x) { return (x || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])); }
     });
-
-    // Modal builder (outside handler so it’s global)
-    function openEventModal(event){
+  
+    // ===== Event Details Modal (kept global so eventClick can call it) =====
+    function openEventModal(event) {
       const modal = document.getElementById('viewModal');
       const title = document.getElementById('viewTitle');
       const body  = document.getElementById('viewBody');
-
+  
       title.textContent = event.title || 'Event';
+  
+      // Pretty "When" string
       const when = (function(){
         const allDay = event.allDay;
         const s = event.start, e = event.end || event.start;
         const dOpts = { weekday:'long', month:'long', day:'numeric', year:'numeric' };
         const tOpts = { hour:'numeric', minute:'2-digit' };
         if (allDay) {
-          return s.toLocaleDateString(undefined, dOpts) + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, dOpts) : '');
+          return s.toLocaleDateString(undefined, dOpts)
+            + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, dOpts) : '');
         }
         const sStr = s.toLocaleDateString(undefined, dOpts) + ' ' + s.toLocaleTimeString(undefined, tOpts);
-        const eStr = e.toLocaleTimeString(undefined, tOpts);
+        const eStr = (e || s).toLocaleTimeString(undefined, tOpts);
         return sStr + ' – ' + eStr;
       })();
-
-      const loc = event.extendedProps.location ? `<div class="kv"><b>Where:</b> ${event.extendedProps.location}</div>` : '';
+  
+      // Build details HTML (location, description -> links, flyer if present)
+      const loc  = event.extendedProps.location ? `<div class="kv"><b>Where:</b> ${escapeHtml(event.extendedProps.location)}</div>` : '';
       const desc = event.extendedProps.description ? `<div class="kv"><b>Details:</b> ${linkify(event.extendedProps.description)}</div>` : '';
       const flyer = (function(){
         const f = event.extendedProps.flyer;
@@ -218,25 +201,76 @@
         return `<div class="kv"><a href="${f}" target="_blank" rel="noopener">View flyer</a></div>`;
       })();
       const gcal = event.url ? `<div class="kv"><a href="${event.url}" target="_blank" rel="noopener">Open in Google Calendar</a></div>` : '';
-
+  
       body.innerHTML = `<div class="kv"><b>When:</b> ${when}</div>${loc}${desc}${flyer}${gcal}`;
-
+  
+      // Wire up buttons
+      const closeBtn = document.getElementById('viewClose');
+      const icsBtn   = document.getElementById('viewIcs');
+  
       modal.style.display = 'flex';
       document.body.classList.add('modal-open');
-
-      document.getElementById('viewClose').onclick = () => { modal.style.display='none'; document.body.classList.remove('modal-open'); };
-      modal.onclick = (e) => { if (e.target === modal) { modal.style.display='none'; document.body.classList.remove('modal-open'); } };
+  
+      closeBtn.onclick = () => { modal.style.display = 'none'; document.body.classList.remove('modal-open'); };
+      modal.onclick = (e) => { if (e.target === modal) { modal.style.display = 'none'; document.body.classList.remove('modal-open'); } };
+  
+      if (icsBtn) icsBtn.onclick = () => saveIcsForEvent(event);
     }
+  
+    // Turn plain URLs in text into clickable links (keeps basic HTML escaping)
     function linkify(t){
-      const esc = (x)=>x.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-      const parts = esc(t||'').split(/\s/).map(w=>{
-        if(/^https?:\/\/[^\s<>"']+$/i.test(w)){ return `<a href="${w}" target="_blank" rel="noopener">${w}</a>`; }
-        return w;
-      });
-      return parts.join(' ');
+      const esc = (x)=> (x||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+      return esc(t).split(/\s/).map(w => /^https?:\/\/[^\s<>"']+$/i.test(w)
+        ? `<a href="${w}" target="_blank" rel="noopener">${w}</a>` : w).join(' ');
     }
-  </script>
-
+  
+    // ===== .ICS (Add to Calendar) helper =====
+    function saveIcsForEvent(evt){
+      const pad = (n)=> String(n).padStart(2,'0');
+      const fmtUTC = (d)=> {
+        const z = new Date(d.getTime() - d.getTimezoneOffset()*60000); // normalize to UTC
+        return z.getUTCFullYear()
+          + pad(z.getUTCMonth()+1) + pad(z.getUTCDate()) + 'T'
+          + pad(z.getUTCHours()) + pad(z.getUTCMinutes()) + pad(z.getUTCSeconds()) + 'Z';
+      };
+  
+      let dtStart, dtEnd, alldayBlock = '';
+      if (evt.allDay) {
+        // VALUE=DATE form for all-day
+        dtStart = evt.start.toISOString().slice(0,10).replace(/-/g,'');
+        const endDate = (evt.end || evt.start).toISOString().slice(0,10).replace(/-/g,'');
+        dtEnd   = endDate;
+        alldayBlock = ';VALUE=DATE';
+      } else {
+        dtStart = fmtUTC(evt.start);
+        dtEnd   = fmtUTC(evt.end || evt.start);
+      }
+  
+      const uid = (evt.id || (Date.now()+'@magnolia'));
+      const ics =
+  `BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//The Magnolia Room//Calendar//EN
+  CALSCALE:GREGORIAN
+  METHOD:PUBLISH
+  BEGIN:VEVENT
+  UID:${uid}
+  SUMMARY:${(evt.title||'').replace(/\n/g,' ')}
+  DTSTART${alldayBlock}:${dtStart}
+  DTEND${alldayBlock}:${dtEnd}
+  LOCATION:${(evt.extendedProps?.location||'').replace(/\n/g,' ')}
+  DESCRIPTION:${(evt.extendedProps?.description||'').replace(/\n/g,' ')}
+  END:VEVENT
+  END:VCALENDAR`;
+  
+      const blob = new Blob([ics], { type: 'text/calendar' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (evt.title || 'event') + '.ics';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+  </script> 
+  
   <!-- Event Details Modal -->
   <div id="viewModal">
     <div id="viewCard">
