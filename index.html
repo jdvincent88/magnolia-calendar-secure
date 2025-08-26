@@ -32,9 +32,18 @@
     /* Page + frame */
     html, body { margin:0; padding:0; background:var(--mk-page-bg); color:var(--mk-text); font-family:var(--mk-font); }
     .wrap { max-width:1100px; margin:28px auto; padding:0 14px; }
-    .frame { background:#fff; border:2px solid var(--mk-frame); border-radius:var(--mk-radius); box-shadow:0 8px 24px rgba(0,0,0,.12); overflow:hidden; }
+    .frame { position:relative; background:#fff; border:2px solid var(--mk-frame); border-radius:var(--mk-radius); box-shadow:0 8px 24px rgba(0,0,0,.12); overflow:hidden; }
     .hdr { display:flex; align-items:center; justify-content:space-between; background:var(--mk-header-bg); color:var(--mk-header-tx); padding:12px 16px; border-bottom:2px solid var(--mk-frame); letter-spacing:.2px; font-weight:700; }
     .hdr-title { font-size: clamp(18px, 2.1vw, 22px); }
+
+    /* Controls */
+    #controls { display:grid; grid-template-columns: 1fr; gap:10px; padding:12px 14px 0; }
+    #calToggles, #tagChips { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip { padding:6px 10px; border-radius:999px; border:1px solid var(--mk-frame); background:#fff; cursor:pointer; font-family:var(--mk-font); }
+    .chip[aria-pressed="true"] { background: var(--mk-accent); color:#fff; border-color: var(--mk-accent); }
+    #q { width:100%; padding:9px 12px; border:1px solid #cfc; border-radius:10px; font-family:var(--mk-font); }
+    .btn { padding:8px 12px; border-radius:10px; border:1px solid var(--mk-frame); background:#fff; font-weight:700; font-family:var(--mk-font); }
+
     #calendar { padding:10px; }
 
     /* FullCalendar theme */
@@ -56,7 +65,7 @@
       --fc-button-active-bg-color: var(--mk-accent);
       font-family: var(--mk-font);
     }
-    .fc .fc-toolbar.fc-header-toolbar{ background:var(--mk-header-bg); color:var(--mk-header-tx); border:1px solid var(--mk-frame); border-radius:12px; padding:8px 10px; margin-bottom:10px; }
+    .fc .fc-toolbar.fc-header-toolbar{ background:var(--mk-header-bg); color:var(--mk-header-tx); border:1px solid var(--mk-frame); border-radius:12px; padding:8px 10px; margin:10px 10px 10px; }
     .fc .fc-button{ border-radius:10px; }
     .fc .fc-daygrid-event{ border-radius:8px; padding:2px 4px; }
 
@@ -65,30 +74,76 @@
     .mk-tip h4{ margin:0 0 4px; font-size:14px; color:#000; }
     .mk-tip small{ color:#333; }
 
+    /* Loader / error overlay */
+    #overlay{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,.78); z-index:10; text-align:center; gap:10px; padding:20px; }
+    #overlay .msg{ font-weight:700; }
+    #overlay .btn{ background:#fff; }
+
     /* Event details modal */
     #viewModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:99999; align-items:center; justify-content:center; }
     #viewCard{ background:#fff; max-width:720px; width:94%; border:2px solid var(--mk-frame); border-radius:16px; box-shadow:0 12px 36px rgba(0,0,0,.25); overflow:hidden; }
-    #viewHead{ background:var(--mk-header-bg); color:#fff; padding:10px 14px; font-weight:700; display:flex; align-items:center; justify-content:space-between; <button id="viewIcs" class="closeBtn">Add to Calendar</button>; }
+    #viewHead{ background:var(--mk-header-bg); color:#fff; padding:10px 14px; font-weight:700; display:flex; align-items:center; justify-content:space-between; }
     #viewBody{ padding:14px; }
     #viewBody img{ max-width:100%; border-radius:12px; border:1px solid #ddd; }
     .kv{ margin:6px 0; }
     .kv b{ display:inline-block; min-width:90px; color:#000; }
     .closeBtn{ background:#fff; color:#000; border:1px solid var(--mk-frame); border-radius:10px; padding:6px 10px; font-weight:600; }
+    .btnRow{ display:flex; gap:8px; }
+    body.modal-open{ overflow:hidden; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="frame">
       <div class="hdr"><div class="hdr-title">The Magnolia Room • Events Calendar</div></div>
+
+      <!-- Controls: calendars (auto-built), tags (auto-built), search -->
+      <div id="controls">
+        <div id="calToggles" aria-label="Calendar sources"></div>
+        <div id="tagChips" aria-label="Event tags"></div>
+        <div style="display:flex; gap:8px">
+          <input id="q" placeholder="Search events (title or details)" />
+          <button id="clearQ" class="btn" type="button">Clear</button>
+        </div>
+      </div>
+
       <div id="calendar"></div>
+
+      <!-- Loader / Error -->
+      <div id="overlay" role="status" aria-live="polite">
+        <div class="msg" id="overlayMsg">Loading…</div>
+        <button id="retryBtn" class="btn" type="button" style="display:none">Retry</button>
+      </div>
     </div>
   </div>
 
+  <!-- FullCalendar JS (globals) -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
   <script>
+    // Utilities
+    function escapeHtml(x){ return (x||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+    function linkify(t){
+      const esc = (x)=> (x||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+      return esc(t).split(/\s/).map(w => /^https?:\/\/[^\s<>"']+$/i.test(w)
+        ? `<a href="${w}" target="_blank" rel="noopener">${w}</a>` : w).join(' ');
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       const el = document.getElementById('calendar');
-  
-      // ---- Hover tooltip helpers ----
+      const overlay = document.getElementById('overlay');
+      const overlayMsg = document.getElementById('overlayMsg');
+      const retryBtn = document.getElementById('retryBtn');
+      const q = document.getElementById('q'); const clearQ = document.getElementById('clearQ');
+      const calToggles = document.getElementById('calToggles');
+      const tagChips = document.getElementById('tagChips');
+
+      let currentNeedle = '';
+      let selectedTags = new Set();
+      let enabledCals = new Map();   // calKey -> boolean
+      let calColors = {};            // calKey -> color
+
+      // Tooltip
       let tipEl = null;
       const showTip = (info) => {
         const rect = info.el.getBoundingClientRect();
@@ -104,55 +159,170 @@
         document.body.appendChild(tipEl);
         const top = Math.max(8, rect.top - tipEl.offsetHeight - 8);
         const left = Math.min(window.innerWidth - tipEl.offsetWidth - 8, Math.max(8, rect.left));
-        tipEl.style.top = top + 'px';
-        tipEl.style.left = left + 'px';
+        tipEl.style.top = top + 'px'; tipEl.style.left = left + 'px';
       };
       const hideTip = () => { if (tipEl) { tipEl.remove(); tipEl = null; } };
-  
-      // ---- FullCalendar init ----
+
+      // Calendar
       const calendar = new FullCalendar.Calendar(el, {
         initialView: 'dayGridMonth',
         headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
         height: 'auto',
-  
-        // Read events from your Netlify Function
+
+        loading: (isLoading)=>{
+          overlay.style.display = isLoading ? 'flex' : 'none';
+          overlayMsg.textContent = isLoading ? 'Loading…' : '';
+          retryBtn.style.display = 'none';
+        },
+
         events: function (info, success, failure) {
           const url = '/.netlify/functions/get-events'
             + '?timeMin=' + encodeURIComponent(info.startStr)
             + '&timeMax=' + encodeURIComponent(info.endStr);
           fetch(url)
             .then(r => r.ok ? r.json() : r.text().then(t => Promise.reject(t)))
-            .then(data => success(data.events || []))
-            .catch(err => failure(err));
+            .then(payload => {
+              const data = payload || {};
+              calColors = data.calColors || calColors;
+              const evts = (data.events || []).map(e => {
+                // derive tags from #hashtags in title/description
+                const txt = ((e.extendedProps?.description)||'') + ' ' + (e.title||'');
+                e.extendedProps.tags = (txt.match(/#[\p{L}\w-]+/gu) || []).map(t => t.toLowerCase());
+                return e;
+              });
+              success(evts);
+            })
+            .catch(err => {
+              overlay.style.display = 'flex';
+              overlayMsg.textContent = 'Failed to load events.';
+              retryBtn.style.display = 'inline-block';
+              retryBtn.onclick = ()=> calendar.refetchEvents();
+              failure(err);
+            });
         },
-  
+
         eventMouseEnter: showTip,
         eventMouseLeave: hideTip,
         eventClick: function (info) {
           info.jsEvent.preventDefault();
           hideTip();
-          openEventModal(info.event); // <--- HERE is where we call it
+          history.replaceState(null, '', '#e=' + encodeURIComponent(info.event.id)); // deep-link
+          openEventModal(info.event);
         },
-        eventDidMount: (info) => { if (info.event?.title) info.el.title = info.event.title; }
+        eventDidMount: (info) => {
+          if (info.event?.title) info.el.title = info.event.title;
+          // Apply per-calendar color (if server provided)
+          const calKey = info.event.extendedProps?.calKey;
+          if (calKey && calColors[calKey]) {
+            info.event.setProp('backgroundColor', calColors[calKey]);
+            info.event.setProp('borderColor', calColors[calKey]);
+          }
+        }
       });
-  
+
       calendar.render();
-  
-      // ---- Mobile default view (list on phones) ----
+
+      // Mobile view
       const setViewForWidth = () => {
         const desired = (window.innerWidth < 640 ? 'listWeek' : 'dayGridMonth');
         if (calendar.view.type !== desired) calendar.changeView(desired);
       };
       setViewForWidth();
       window.addEventListener('resize', setViewForWidth);
-  
-      // ---- Keep iframe height correct when embedded ----
+
+      // iframe height
       function postHeight() { parent.postMessage({ type: 'mkCalendarHeight', height: document.body.scrollHeight }, '*'); }
       new ResizeObserver(postHeight).observe(document.body);
       window.addEventListener('load', postHeight);
       setTimeout(postHeight, 500);
-  
-      // ---- Helpers used above ----
+
+      // Build filters + open by hash when events are set
+      const eventIndex = new Map();
+      calendar.on('eventsSet', (events) => {
+        eventIndex.clear();
+        const cals = new Set();
+        const tags = new Map(); // tag -> count
+        events.forEach(evt => {
+          eventIndex.set(evt.id, evt);
+          const calKey = evt.extendedProps?.calKey || 'default';
+          cals.add(calKey);
+          (evt.extendedProps?.tags||[]).forEach(t => tags.set(t, (tags.get(t)||0)+1));
+        });
+
+        // Calendar toggles (build once, keep states)
+        if (calToggles.childElementCount === 0) {
+          cals.forEach(key => {
+            enabledCals.set(key, true);
+            const color = calColors[key] || '#DE8F05';
+            const b = document.createElement('button');
+            b.className = 'chip';
+            b.type = 'button';
+            b.setAttribute('aria-pressed', 'true');
+            b.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:8px"></span>${escapeHtml(key)}`;
+            b.onclick = () => {
+              const on = b.getAttribute('aria-pressed') !== 'true';
+              b.setAttribute('aria-pressed', on ? 'true' : 'false');
+              enabledCals.set(key, on);
+              applyFilter();
+            };
+            calToggles.appendChild(b);
+          });
+        }
+
+        // Tag chips (rebuild based on current events)
+        tagChips.innerHTML = '';
+        // Top tags by frequency (up to 12)
+        [...tags.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12).forEach(([tag])=>{
+          const chip = document.createElement('button');
+          chip.className = 'chip'; chip.type = 'button';
+          chip.textContent = tag;
+          chip.setAttribute('aria-pressed', selectedTags.has(tag) ? 'true' : 'false');
+          chip.onclick = ()=>{
+            if (selectedTags.has(tag)) { selectedTags.delete(tag); chip.setAttribute('aria-pressed','false'); }
+            else { selectedTags.add(tag); chip.setAttribute('aria-pressed','true'); }
+            applyFilter();
+          };
+          tagChips.appendChild(chip);
+        });
+        if (tags.size > 0) {
+          const clr = document.createElement('button');
+          clr.className = 'btn'; clr.type='button'; clr.textContent='Clear tags';
+          clr.onclick = ()=>{ selectedTags.clear(); [...tagChips.querySelectorAll('.chip')].forEach(c=>c.setAttribute('aria-pressed','false')); applyFilter(); };
+          tagChips.appendChild(clr);
+        }
+
+        // Apply filter after building UI
+        applyFilter();
+
+        // Deep-link open
+        const m = location.hash.match(/^#e=([^&]+)/);
+        if (m) {
+          const id = decodeURIComponent(m[1]);
+          if (eventIndex.has(id)) openEventModal(eventIndex.get(id));
+        }
+      });
+
+      // Text search filter
+      function applyFilter(){
+        const needle = currentNeedle;
+        const hasTags = selectedTags.size > 0;
+        calendar.batchRendering(() => {
+          calendar.getEvents().forEach(evt => {
+            const calKey = evt.extendedProps?.calKey || 'default';
+            const calOk = enabledCals.get(calKey) !== false;
+            const hay = ((evt.title||'') + ' ' + (evt.extendedProps?.description||'')).toLowerCase();
+            const txtOk = !needle || hay.includes(needle);
+            const tags = evt.extendedProps?.tags || [];
+            const tagOk = !hasTags || tags.some(t => selectedTags.has(t));
+            const visible = calOk && txtOk && tagOk;
+            evt.setProp('display', visible ? 'auto' : 'none');
+          });
+        });
+      }
+      q.addEventListener('input', (e)=>{ currentNeedle = e.target.value.trim().toLowerCase(); applyFilter(); });
+      clearQ.addEventListener('click', ()=>{ q.value=''; currentNeedle=''; applyFilter(); });
+
+      // Helpers
       function formatRange(event) {
         const s = event.start, e = event.end || event.start;
         const dOpts = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
@@ -165,18 +335,18 @@
         const eStr = e.toLocaleTimeString(undefined, tOpts);
         return sStr + ' – ' + eStr;
       }
-      function escapeHtml(x) { return (x || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])); }
     });
-  
-    // ===== Event Details Modal (kept global so eventClick can call it) =====
+
+    // ===== Event Details Modal (global) =====
+    let lastFocusEl = null;
     function openEventModal(event) {
       const modal = document.getElementById('viewModal');
       const title = document.getElementById('viewTitle');
       const body  = document.getElementById('viewBody');
-  
+
+      lastFocusEl = document.activeElement || null;
       title.textContent = event.title || 'Event';
-  
-      // Pretty "When" string
+
       const when = (function(){
         const allDay = event.allDay;
         const s = event.start, e = event.end || event.start;
@@ -190,8 +360,7 @@
         const eStr = (e || s).toLocaleTimeString(undefined, tOpts);
         return sStr + ' – ' + eStr;
       })();
-  
-      // Build details HTML (location, description -> links, flyer if present)
+
       const loc  = event.extendedProps.location ? `<div class="kv"><b>Where:</b> ${escapeHtml(event.extendedProps.location)}</div>` : '';
       const desc = event.extendedProps.description ? `<div class="kv"><b>Details:</b> ${linkify(event.extendedProps.description)}</div>` : '';
       const flyer = (function(){
@@ -201,82 +370,106 @@
         return `<div class="kv"><a href="${f}" target="_blank" rel="noopener">View flyer</a></div>`;
       })();
       const gcal = event.url ? `<div class="kv"><a href="${event.url}" target="_blank" rel="noopener">Open in Google Calendar</a></div>` : '';
-  
+
       body.innerHTML = `<div class="kv"><b>When:</b> ${when}</div>${loc}${desc}${flyer}${gcal}`;
-  
-      // Wire up buttons
+
+      // JSON-LD for SEO
+      document.querySelectorAll('script[type="application/ld+json"].mk-ld').forEach(n=>n.remove());
+      const ld = {
+        "@context":"https://schema.org",
+        "@type":"Event",
+        "name": event.title || "Event",
+        "startDate": event.start.toISOString(),
+        "endDate": (event.end||event.start).toISOString(),
+        "eventAttendanceMode":"https://schema.org/OfflineEventAttendanceMode",
+        "location": event.extendedProps?.location ? { "@type":"Place", "name": event.extendedProps.location } : undefined,
+        "description": event.extendedProps?.description || "",
+        "image": event.extendedProps?.flyer ? [event.extendedProps.flyer] : undefined,
+        "url": location.href.split('#')[0] + '#e=' + encodeURIComponent(event.id)
+      };
+      const s = document.createElement('script');
+      s.type = 'application/ld+json'; s.className='mk-ld';
+      s.textContent = JSON.stringify(ld);
+      document.head.appendChild(s);
+
+      // Buttons and open
       const closeBtn = document.getElementById('viewClose');
       const icsBtn   = document.getElementById('viewIcs');
-  
+
       modal.style.display = 'flex';
       document.body.classList.add('modal-open');
-  
-      closeBtn.onclick = () => { modal.style.display = 'none'; document.body.classList.remove('modal-open'); };
-      modal.onclick = (e) => { if (e.target === modal) { modal.style.display = 'none'; document.body.classList.remove('modal-open'); } };
-  
-      if (icsBtn) icsBtn.onclick = () => saveIcsForEvent(event);
+
+      // Focus management + trap
+      const focusables = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      (icsBtn || closeBtn)?.focus();
+      modal.onkeydown = (e)=>{
+        if (e.key === 'Escape') { closeModal(); }
+        if (e.key === 'Tab' && focusables.length) {
+          const first = focusables[0], last = focusables[focusables.length-1];
+          if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
+          else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
+        }
+      };
+
+      closeBtn.onclick = () => closeModal();
+      modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+      icsBtn && (icsBtn.onclick = () => saveIcsForEvent(event));
     }
-  
-    // Turn plain URLs in text into clickable links (keeps basic HTML escaping)
-    function linkify(t){
-      const esc = (x)=> (x||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-      return esc(t).split(/\s/).map(w => /^https?:\/\/[^\s<>"']+$/i.test(w)
-        ? `<a href="${w}" target="_blank" rel="noopener">${w}</a>` : w).join(' ');
+    function closeModal(){
+      const modal = document.getElementById('viewModal');
+      modal.style.display = 'none';
+      document.body.classList.remove('modal-open');
+      if (lastFocusEl) { try { lastFocusEl.focus(); } catch(_){} }
     }
-  
-    // ===== .ICS (Add to Calendar) helper =====
+
+    // .ICS helper
     function saveIcsForEvent(evt){
       const pad = (n)=> String(n).padStart(2,'0');
       const fmtUTC = (d)=> {
-        const z = new Date(d.getTime() - d.getTimezoneOffset()*60000); // normalize to UTC
+        const z = new Date(d.getTime() - d.getTimezoneOffset()*60000);
         return z.getUTCFullYear()
           + pad(z.getUTCMonth()+1) + pad(z.getUTCDate()) + 'T'
           + pad(z.getUTCHours()) + pad(z.getUTCMinutes()) + pad(z.getUTCSeconds()) + 'Z';
       };
-  
-      let dtStart, dtEnd, alldayBlock = '';
+      let dtStart, dtEnd, allday = '';
       if (evt.allDay) {
-        // VALUE=DATE form for all-day
         dtStart = evt.start.toISOString().slice(0,10).replace(/-/g,'');
         const endDate = (evt.end || evt.start).toISOString().slice(0,10).replace(/-/g,'');
-        dtEnd   = endDate;
-        alldayBlock = ';VALUE=DATE';
-      } else {
-        dtStart = fmtUTC(evt.start);
-        dtEnd   = fmtUTC(evt.end || evt.start);
-      }
-  
+        dtEnd   = endDate; allday = ';VALUE=DATE';
+      } else { dtStart = fmtUTC(evt.start); dtEnd = fmtUTC(evt.end || evt.start); }
       const uid = (evt.id || (Date.now()+'@magnolia'));
       const ics =
-  `BEGIN:VCALENDAR
-  VERSION:2.0
-  PRODID:-//The Magnolia Room//Calendar//EN
-  CALSCALE:GREGORIAN
-  METHOD:PUBLISH
-  BEGIN:VEVENT
-  UID:${uid}
-  SUMMARY:${(evt.title||'').replace(/\n/g,' ')}
-  DTSTART${alldayBlock}:${dtStart}
-  DTEND${alldayBlock}:${dtEnd}
-  LOCATION:${(evt.extendedProps?.location||'').replace(/\n/g,' ')}
-  DESCRIPTION:${(evt.extendedProps?.description||'').replace(/\n/g,' ')}
-  END:VEVENT
-  END:VCALENDAR`;
-  
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//The Magnolia Room//Calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:${uid}
+SUMMARY:${(evt.title||'').replace(/\n/g,' ')}
+DTSTART${allday}:${dtStart}
+DTEND${allday}:${dtEnd}
+LOCATION:${(evt.extendedProps?.location||'').replace(/\n/g,' ')}
+DESCRIPTION:${(evt.extendedProps?.description||'').replace(/\n/g,' ')}
+END:VEVENT
+END:VCALENDAR`;
       const blob = new Blob([ics], { type: 'text/calendar' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = (evt.title || 'event') + '.ics';
       document.body.appendChild(a); a.click(); a.remove();
     }
-  </script> 
-  
+  </script>
+
   <!-- Event Details Modal -->
-  <div id="viewModal">
+  <div id="viewModal" role="dialog" aria-modal="true" aria-labelledby="viewTitle">
     <div id="viewCard">
       <div id="viewHead">
         <div id="viewTitle">Event</div>
-        <button id="viewClose" class="closeBtn">Close</button>
+        <div class="btnRow">
+          <button id="viewIcs" class="closeBtn" type="button">Add to Calendar</button>
+          <button id="viewClose" class="closeBtn" type="button">Close</button>
+        </div>
       </div>
       <div id="viewBody"></div>
     </div>
