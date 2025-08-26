@@ -1,10 +1,99 @@
-FullCalendar (globals build) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Magnolia Room • Events Calendar</title>
+
+  <!-- Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- FullCalendar CSS (core has no CSS in v6) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.15/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.15/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.15/index.css">
+
+  <style>
+    /* ===== THEME ===== */
+    :root{
+      --mk-page-bg:   #fff8f3;
+      --mk-frame:     #6C0101;   /* deep maroon */
+      --mk-header-bg: #6C0101;
+      --mk-header-tx: #ffffff;
+      --mk-accent:    #DE8F05;   /* old gold */
+      --mk-accent-2:  #9A6A35;   /* antique gold */
+      --mk-text:      #2b2b2b;
+      --mk-font:      "Playfair Display", Georgia, "Times New Roman", serif;
+      --mk-radius:    16px;
+    }
+
+    /* Page + frame */
+    html, body { margin:0; padding:0; background:var(--mk-page-bg); color:var(--mk-text); font-family:var(--mk-font); }
+    .wrap { max-width:1100px; margin:28px auto; padding:0 14px; }
+    .frame { background:#fff; border:2px solid var(--mk-frame); border-radius:var(--mk-radius); box-shadow:0 8px 24px rgba(0,0,0,.12); overflow:hidden; }
+    .hdr { display:flex; align-items:center; justify-content:space-between; background:var(--mk-header-bg); color:var(--mk-header-tx); padding:12px 16px; border-bottom:2px solid var(--mk-frame); letter-spacing:.2px; font-weight:700; }
+    .hdr-title { font-size: clamp(18px, 2.1vw, 22px); }
+    #calendar { padding:10px; }
+
+    /* FullCalendar theme */
+    .fc{
+      --fc-page-bg-color:#fff;
+      --fc-neutral-bg-color: color-mix(in oklab, var(--mk-header-bg) 8%, white);
+      --fc-border-color: var(--mk-frame);
+      --fc-text-color:#222;
+      --fc-today-bg-color: color-mix(in oklab, var(--mk-accent) 18%, white);
+      --fc-event-bg-color: var(--mk-accent);
+      --fc-event-border-color: var(--mk-accent);
+      --fc-event-text-color:#fff;
+      --fc-now-indicator-color: var(--mk-accent);
+
+      --fc-button-text-color:#fff;
+      --fc-button-bg-color: color-mix(in oklab, var(--mk-header-bg) 90%, black);
+      --fc-button-border-color: var(--mk-frame);
+      --fc-button-hover-bg-color: color-mix(in oklab, var(--mk-header-bg) 80%, black);
+      --fc-button-active-bg-color: var(--mk-accent);
+      font-family: var(--mk-font);
+    }
+    .fc .fc-toolbar.fc-header-toolbar{ background:var(--mk-header-bg); color:var(--mk-header-tx); border:1px solid var(--mk-frame); border-radius:12px; padding:8px 10px; margin-bottom:10px; }
+    .fc .fc-button{ border-radius:10px; }
+    .fc .fc-daygrid-event{ border-radius:8px; padding:2px 4px; }
+
+    /* Hover tooltip */
+    .mk-tip{ position:fixed; z-index:9999; background:#fff; color:#000; border:1px solid var(--mk-frame); border-radius:10px; padding:8px 10px; box-shadow:0 10px 30px rgba(0,0,0,.2); max-width:260px; font-size:13px; }
+    .mk-tip h4{ margin:0 0 4px; font-size:14px; color:#000; }
+    .mk-tip small{ color:#333; }
+
+    /* Event details modal */
+    #viewModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:99999; align-items:center; justify-content:center; }
+    #viewCard{ background:#fff; max-width:720px; width:94%; border:2px solid var(--mk-frame); border-radius:16px; box-shadow:0 12px 36px rgba(0,0,0,.25); overflow:hidden; }
+    #viewHead{ background:var(--mk-header-bg); color:#fff; padding:10px 14px; font-weight:700; display:flex; align-items:center; justify-content:space-between; }
+    #viewBody{ padding:14px; }
+    #viewBody img{ max-width:100%; border-radius:12px; border:1px solid #ddd; }
+    .kv{ margin:6px 0; }
+    .kv b{ display:inline-block; min-width:90px; color:#000; }
+    .closeBtn{ background:#fff; color:#000; border:1px solid var(--mk-frame); border-radius:10px; padding:6px 10px; font-weight:600; }
+    .btnRow{ display:flex; gap:8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="frame">
+      <div class="hdr"><div class="hdr-title">The Magnolia Room • Events Calendar</div></div>
+      <div id="calendar"></div>
+    </div>
+  </div>
+
+  <!-- FullCalendar JS bundle (REQUIRED) -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+  <!-- Calendar + modal logic -->
   <script>
-    document.addEventListener('DOMContentLoaded', function(){
+    document.addEventListener('DOMContentLoaded', function () {
       const el = document.getElementById('calendar');
 
-      // Simple hover tooltip
+      // ---- Hover tooltip helpers ----
       let tipEl = null;
       const showTip = (info) => {
         const rect = info.el.getBoundingClientRect();
@@ -25,13 +114,14 @@ FullCalendar (globals build) -->
       };
       const hideTip = () => { if (tipEl) { tipEl.remove(); tipEl = null; } };
 
+      // ---- FullCalendar init ----
       const calendar = new FullCalendar.Calendar(el, {
         initialView: 'dayGridMonth',
-        headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
         height: 'auto',
 
         // Read events from your Netlify Function
-        events: function(info, success, failure){
+        events: function (info, success, failure) {
           const url = '/.netlify/functions/get-events'
             + '?timeMin=' + encodeURIComponent(info.startStr)
             + '&timeMax=' + encodeURIComponent(info.endStr);
@@ -43,38 +133,17 @@ FullCalendar (globals build) -->
 
         eventMouseEnter: showTip,
         eventMouseLeave: hideTip,
-        eventClick: function(info){
+        eventClick: function (info) {
           info.jsEvent.preventDefault();
           hideTip();
-          openEventModal(info.event);
+          openEventModal(info.event); // <--- opens modal
         },
         eventDidMount: (info) => { if (info.event?.title) info.el.title = info.event.title; }
       });
 
       calendar.render();
-      
-      // Keep a quick index of events by id once they’re loaded
-      let eventIndex = new Map();
-      calendar.on('eventsSet', (events) => {
-        eventIndex.clear();
-        events.forEach(evt => eventIndex.set(evt.id, evt));
-        // open by hash if present
-        const m = location.hash.match(/^#e=([^&]+)/);
-        if (m && eventIndex.has(decodeURIComponent(m[1]))) {
-          openEventModal(eventIndex.get(decodeURIComponent(m[1])));
-        }
-      });
-      
-      // When an event is clicked, update the URL hash
-      const originalClick = calendar.getOption('eventClick');
-      calendar.setOption('eventClick', function(info){
-        history.replaceState(null, '', '#e=' + encodeURIComponent(info.event.id));
-        originalClick(info); // open popup as before
-      });
 
-      /* ===== MOBILE DEFAULT VIEW SNIPPET =====
-         Phones show listWeek; larger screens show month.
-      */
+      // ---- Mobile default view (list on phones) ----
       const setViewForWidth = () => {
         const desired = (window.innerWidth < 640 ? 'listWeek' : 'dayGridMonth');
         if (calendar.view.type !== desired) calendar.changeView(desired);
@@ -82,48 +151,53 @@ FullCalendar (globals build) -->
       setViewForWidth();
       window.addEventListener('resize', setViewForWidth);
 
-      // Keep iframe height correct when embedded
-      function postHeight(){ parent.postMessage({ type:'mkCalendarHeight', height:document.body.scrollHeight }, '*'); }
+      // ---- Keep iframe height correct when embedded ----
+      function postHeight() { parent.postMessage({ type: 'mkCalendarHeight', height: document.body.scrollHeight }, '*'); }
       new ResizeObserver(postHeight).observe(document.body);
       window.addEventListener('load', postHeight);
       setTimeout(postHeight, 500);
 
-      // helpers
-      function formatRange(event){
+      // ---- Helpers used above ----
+      function formatRange(event) {
         const s = event.start, e = event.end || event.start;
-        const dOpts = { weekday:'short', month:'short', day:'numeric', year:'numeric' };
-        const tOpts = { hour:'numeric', minute:'2-digit' };
+        const dOpts = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+        const tOpts = { hour: 'numeric', minute: '2-digit' };
         if (event.allDay) {
-          return s.toLocaleDateString(undefined, dOpts) + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, dOpts) : '');
+          return s.toLocaleDateString(undefined, dOpts)
+            + (e && e > s ? ' – ' + new Date(e.getTime() - 1).toLocaleDateString(undefined, dOpts) : '');
         }
         const sStr = s.toLocaleDateString(undefined, dOpts) + ' ' + s.toLocaleTimeString(undefined, tOpts);
         const eStr = e.toLocaleTimeString(undefined, tOpts);
         return sStr + ' – ' + eStr;
       }
-      function escapeHtml(x){ return (x||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+      function escapeHtml(x) { return (x || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])); }
     });
 
-    // Modal builder (outside handler so it’s global)
-    function openEventModal(event){
+    // ===== Event Details Modal (global) =====
+    function openEventModal(event) {
       const modal = document.getElementById('viewModal');
       const title = document.getElementById('viewTitle');
       const body  = document.getElementById('viewBody');
 
       title.textContent = event.title || 'Event';
+
+      // Pretty "When" string
       const when = (function(){
         const allDay = event.allDay;
         const s = event.start, e = event.end || event.start;
         const dOpts = { weekday:'long', month:'long', day:'numeric', year:'numeric' };
         const tOpts = { hour:'numeric', minute:'2-digit' };
         if (allDay) {
-          return s.toLocaleDateString(undefined, dOpts) + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, dOpts) : '');
+          return s.toLocaleDateString(undefined, dOpts)
+            + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, dOpts) : '');
         }
         const sStr = s.toLocaleDateString(undefined, dOpts) + ' ' + s.toLocaleTimeString(undefined, tOpts);
-        const eStr = e.toLocaleTimeString(undefined, tOpts);
+        const eStr = (e || s).toLocaleTimeString(undefined, tOpts);
         return sStr + ' – ' + eStr;
       })();
 
-      const loc = event.extendedProps.location ? `<div class="kv"><b>Where:</b> ${event.extendedProps.location}</div>` : '';
+      // Build details HTML
+      const loc  = event.extendedProps.location ? `<div class="kv"><b>Where:</b> ${escapeHtml(event.extendedProps.location)}</div>` : '';
       const desc = event.extendedProps.description ? `<div class="kv"><b>Details:</b> ${linkify(event.extendedProps.description)}</div>` : '';
       const flyer = (function(){
         const f = event.extendedProps.flyer;
@@ -135,18 +209,84 @@ FullCalendar (globals build) -->
 
       body.innerHTML = `<div class="kv"><b>When:</b> ${when}</div>${loc}${desc}${flyer}${gcal}`;
 
+      // Wire up buttons
+      const closeBtn = document.getElementById('viewClose');
+      const icsBtn   = document.getElementById('viewIcs');
+
       modal.style.display = 'flex';
       document.body.classList.add('modal-open');
 
-      document.getElementById('viewClose').onclick = () => { modal.style.display='none'; document.body.classList.remove('modal-open'); };
-      modal.onclick = (e) => { if (e.target === modal) { modal.style.display='none'; document.body.classList.remove('modal-open'); } };
+      closeBtn.onclick = () => { modal.style.display = 'none'; document.body.classList.remove('modal-open'); };
+      modal.onclick = (e) => { if (e.target === modal) { modal.style.display = 'none'; document.body.classList.remove('modal-open'); } };
+
+      if (icsBtn) icsBtn.onclick = () => saveIcsForEvent(event);
     }
+
+    // Turn plain URLs in text into clickable links
     function linkify(t){
-      const esc = (x)=>x.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-      const parts = esc(t||'').split(/\s/).map(w=>{
-        if(/^https?:\/\/[^\s<>"']+$/i.test(w)){ return `<a href="${w}" target="_blank" rel="noopener">${w}</a>`; }
-        return w;
-      });
-      return parts.join(' ');
+      const esc = (x)=> (x||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+      return esc(t).split(/\s/).map(w => /^https?:\/\/[^\s<>"']+$/i.test(w)
+        ? `<a href="${w}" target="_blank" rel="noopener">${w}</a>` : w).join(' ');
+    }
+
+    // ===== .ICS (Add to Calendar) helper =====
+    function saveIcsForEvent(evt){
+      const pad = (n)=> String(n).padStart(2,'0');
+      const fmtUTC = (d)=> {
+        const z = new Date(d.getTime() - d.getTimezoneOffset()*60000); // normalize to UTC
+        return z.getUTCFullYear()
+          + pad(z.getUTCMonth()+1) + pad(z.getUTCDate()) + 'T'
+          + pad(z.getUTCHours()) + pad(z.getUTCMinutes()) + pad(z.getUTCSeconds()) + 'Z';
+      };
+
+      let dtStart, dtEnd, alldayBlock = '';
+      if (evt.allDay) {
+        dtStart = evt.start.toISOString().slice(0,10).replace(/-/g,'');
+        const endDate = (evt.end || evt.start).toISOString().slice(0,10).replace(/-/g,'');
+        dtEnd   = endDate;
+        alldayBlock = ';VALUE=DATE';
+      } else {
+        dtStart = fmtUTC(evt.start);
+        dtEnd   = fmtUTC(evt.end || evt.start);
+      }
+
+      const uid = (evt.id || (Date.now()+'@magnolia'));
+      const ics =
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//The Magnolia Room//Calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:${uid}
+SUMMARY:${(evt.title||'').replace(/\n/g,' ')}
+DTSTART${alldayBlock}:${dtStart}
+DTEND${alldayBlock}:${dtEnd}
+LOCATION:${(evt.extendedProps?.location||'').replace(/\n/g,' ')}
+DESCRIPTION:${(evt.extendedProps?.description||'').replace(/\n/g,' ')}
+END:VEVENT
+END:VCALENDAR`;
+
+      const blob = new Blob([ics], { type: 'text/calendar' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (evt.title || 'event') + '.ics';
+      document.body.appendChild(a); a.click(); a.remove();
     }
   </script>
+
+  <!-- Event Details Modal -->
+  <div id="viewModal" role="dialog" aria-modal="true" aria-labelledby="viewTitle">
+    <div id="viewCard">
+      <div id="viewHead">
+        <div id="viewTitle">Event</div>
+        <div class="btnRow">
+          <button id="viewIcs" class="closeBtn">Add to Calendar</button>
+          <button id="viewClose" class="closeBtn">Close</button>
+        </div>
+      </div>
+      <div id="viewBody"></div>
+    </div>
+  </div>
+</body>
+</html>
