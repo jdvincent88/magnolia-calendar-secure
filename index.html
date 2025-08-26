@@ -81,6 +81,14 @@
   <div class="wrap">
     <div class="frame">
       <div class="hdr"><div class="hdr-title">The Magnolia Room • Events Calendar</div></div>
+
+      <!-- ▼▼▼ ADDED: simple search UI ▼▼▼ -->
+      <div id="filters" style="padding:10px 12px">
+        <input id="q" placeholder="Search (title or details)" style="padding:8px;border:1px solid #cfc;border-radius:10px;width:60%" />
+        <button id="clearQ" class="closeBtn" style="margin-left:6px">Clear</button>
+      </div>
+      <!-- ▲▲▲ ADDED: simple search UI ▲▲▲ -->
+
       <div id="calendar"></div>
     </div>
   </div>
@@ -92,6 +100,11 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const el = document.getElementById('calendar');
+
+      // --- Simple text search DOM handles & state ---
+      const q = document.getElementById('q');
+      const clearQ = document.getElementById('clearQ');
+      let currentNeedle = '';
 
       // ---- Hover tooltip helpers ----
       let tipEl = null;
@@ -140,6 +153,22 @@
         },
         eventDidMount: (info) => { if (info.event?.title) info.el.title = info.event.title; }
       });
+
+      // ------- FILTERING (simple, no database) -------
+      function applyFilter(){
+        const needle = currentNeedle;
+        calendar.batchRendering(() => {
+          calendar.getEvents().forEach(evt => {
+            const hay = ((evt.title || '') + ' ' + ((evt.extendedProps && evt.extendedProps.description) || '')).toLowerCase();
+            const visible = !needle || hay.includes(needle);
+            evt.setProp('display', visible ? 'auto' : 'none');
+          });
+        });
+      }
+      calendar.on('eventsSet', () => applyFilter());
+      if (q) q.addEventListener('input', (e)=>{ currentNeedle = (e.target.value || '').trim().toLowerCase(); applyFilter(); });
+      if (clearQ) clearQ.addEventListener('click', ()=>{ if (q) q.value=''; currentNeedle=''; applyFilter(); });
+      // ----------------------------------------------
 
       calendar.render();
 
@@ -290,3 +319,4 @@ END:VCALENDAR`;
   </div>
 </body>
 </html>
+
