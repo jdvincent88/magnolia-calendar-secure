@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -16,80 +16,55 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.15/index.css">
 
   <style>
-    /* ===== THEME ===== */
     :root{
-      --mk-page-bg:   #fff8f3;
-      --mk-frame:     #6C0101;   /* deep maroon */
-      --mk-header-bg: #6C0101;
-      --mk-header-tx: #ffffff;
-      --mk-accent:    #DE8F05;   /* old gold */
-      --mk-accent-2:  #9A6A35;   /* antique gold */
-      --mk-text:      #2b2b2b;
-      --mk-font:      "Playfair Display", Georgia, "Times New Roman", serif;
-      --mk-radius:    16px;
+      --mk-page-bg:#fff8f3; --mk-frame:#6C0101; --mk-header-bg:#6C0101; --mk-header-tx:#fff;
+      --mk-accent:#DE8F05; --mk-accent-2:#9A6A35; --mk-text:#2b2b2b;
+      --mk-font:"Playfair Display", Georgia, "Times New Roman", serif; --mk-radius:16px;
     }
-
-    /* Page + frame */
-    html, body { margin:0; padding:0; background:var(--mk-page-bg); color:var(--mk-text); font-family:var(--mk-font); }
-    .wrap { max-width:1100px; margin:28px auto; padding:0 14px; }
-    .frame { position:relative; background:#fff; border:2px solid var(--mk-frame); border-radius:var(--mk-radius); box-shadow:0 8px 24px rgba(0,0,0,.12); overflow:hidden; }
-    .hdr { display:flex; align-items:center; justify-content:space-between; background:var(--mk-header-bg); color:var(--mk-header-tx); padding:12px 16px; border-bottom:2px solid var(--mk-frame); letter-spacing:.2px; font-weight:700; }
-    .hdr-title { font-size: clamp(18px, 2.1vw, 22px); }
-
-    /* Controls */
-    #controls { display:grid; grid-template-columns: 1fr; gap:10px; padding:12px 14px 0; }
-    #calToggles, #tagChips { display:flex; flex-wrap:wrap; gap:8px; }
-    .chip { padding:6px 10px; border-radius:999px; border:1px solid var(--mk-frame); background:#fff; cursor:pointer; font-family:var(--mk-font); }
-    .chip[aria-pressed="true"] { background: var(--mk-accent); color:#fff; border-color: var(--mk-accent); }
-    #q { width:100%; padding:9px 12px; border:1px solid #cfc; border-radius:10px; font-family:var(--mk-font); }
-    .btn { padding:8px 12px; border-radius:10px; border:1px solid var(--mk-frame); background:#fff; font-weight:700; font-family:var(--mk-font); }
-
-    #calendar { padding:10px; }
-
-    /* FullCalendar theme */
+    html,body{margin:0;padding:0;background:var(--mk-page-bg);color:var(--mk-text);font-family:var(--mk-font)}
+    .wrap{max-width:1100px;margin:28px auto;padding:0 14px}
+    .frame{position:relative;background:#fff;border:2px solid var(--mk-frame);border-radius:var(--mk-radius);box-shadow:0 8px 24px rgba(0,0,0,.12);overflow:hidden}
+    .hdr{display:flex;align-items:center;justify-content:space-between;background:var(--mk-header-bg);color:var(--mk-header-tx);padding:12px 16px;border-bottom:2px solid var(--mk-frame);letter-spacing:.2px;font-weight:700}
+    .hdr-title{font-size:clamp(18px,2.1vw,22px)}
+    #controls{display:grid;grid-template-columns:1fr;gap:10px;padding:12px 14px 0}
+    #calToggles,#tagChips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--mk-frame);background:#fff;cursor:pointer;font-family:var(--mk-font)}
+    .chip[aria-pressed="true"]{background:var(--mk-accent);color:#fff;border-color:var(--mk-accent)}
+    #q{width:100%;padding:9px 12px;border:1px solid #cfc;border-radius:10px;font-family:var(--mk-font)}
+    .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--mk-frame);background:#fff;font-weight:700;font-family:var(--mk-font)}
+    #calendar{padding:10px}
     .fc{
-      --fc-page-bg-color:#fff;
-      --fc-neutral-bg-color: color-mix(in oklab, var(--mk-header-bg) 8%, white);
-      --fc-border-color: var(--mk-frame);
-      --fc-text-color:#222;
-      --fc-today-bg-color: color-mix(in oklab, var(--mk-accent) 18%, white);
-      --fc-event-bg-color: var(--mk-accent);
-      --fc-event-border-color: var(--mk-accent);
-      --fc-event-text-color:#fff;
-      --fc-now-indicator-color: var(--mk-accent);
-
-      --fc-button-text-color:#fff;
-      --fc-button-bg-color: color-mix(in oklab, var(--mk-header-bg) 90%, black);
-      --fc-button-border-color: var(--mk-frame);
-      --fc-button-hover-bg-color: color-mix(in oklab, var(--mk-header-bg) 80%, black);
-      --fc-button-active-bg-color: var(--mk-accent);
-      font-family: var(--mk-font);
+      --fc-page-bg-color:#fff; --fc-neutral-bg-color: color-mix(in oklab, var(--mk-header-bg) 8%, white);
+      --fc-border-color:var(--mk-frame); --fc-text-color:#222; --fc-today-bg-color: color-mix(in oklab, var(--mk-accent) 18%, white);
+      --fc-event-bg-color:var(--mk-accent); --fc-event-border-color:var(--mk-accent); --fc-event-text-color:#fff;
+      --fc-now-indicator-color:var(--mk-accent);
+      --fc-button-text-color:#fff; --fc-button-bg-color: color-mix(in oklab, var(--mk-header-bg) 90%, black);
+      --fc-button-border-color:var(--mk-frame); --fc-button-hover-bg-color: color-mix(in oklab, var(--mk-header-bg) 80%, black);
+      --fc-button-active-bg-color:var(--mk-accent);
+      font-family:var(--mk-font);
     }
-    .fc .fc-toolbar.fc-header-toolbar{ background:var(--mk-header-bg); color:var(--mk-header-tx); border:1px solid var(--mk-frame); border-radius:12px; padding:8px 10px; margin:10px 10px 10px; }
-    .fc .fc-button{ border-radius:10px; }
-    .fc .fc-daygrid-event{ border-radius:8px; padding:2px 4px; }
+    .fc .fc-toolbar.fc-header-toolbar{background:var(--mk-header-bg);color:var(--mk-header-tx);border:1px solid var(--mk-frame);border-radius:12px;padding:8px 10px;margin:10px}
+    .fc .fc-button{border-radius:10px}
+    .fc .fc-daygrid-event{border-radius:8px;padding:2px 4px}
 
-    /* Hover tooltip */
-    .mk-tip{ position:fixed; z-index:9999; background:#fff; color:#000; border:1px solid var(--mk-frame); border-radius:10px; padding:8px 10px; box-shadow:0 10px 30px rgba(0,0,0,.2); max-width:260px; font-size:13px; }
-    .mk-tip h4{ margin:0 0 4px; font-size:14px; color:#000; }
-    .mk-tip small{ color:#333; }
+    .mk-tip{position:fixed;z-index:9999;background:#fff;color:#000;border:1px solid var(--mk-frame);border-radius:10px;padding:8px 10px;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:260px;font-size:13px}
+    .mk-tip h4{margin:0 0 4px;font-size:14px;color:#000}
+    .mk-tip small{color:#333}
 
-    /* Loader / error overlay */
-    #overlay{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,.78); z-index:10; text-align:center; gap:10px; padding:20px; }
-    #overlay .msg{ font-weight:700; }
-    #overlay .btn{ background:#fff; }
+    #overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.78);z-index:10;text-align:center;gap:10px;padding:20px}
+    #overlay .msg{font-weight:700}
+    #overlay .btn{background:#fff}
 
-    /* Event details modal */
-    #viewModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:99999; align-items:center; justify-content:center; }
-    #viewCard{ background:#fff; max-width:720px; width:94%; border:2px solid var(--mk-frame); border-radius:16px; box-shadow:0 12px 36px rgba(0,0,0,.25); overflow:hidden; }
-    #viewHead{ background:var(--mk-header-bg); color:#fff; padding:10px 14px; font-weight:700; display:flex; align-items:center; justify-content:space-between; }
-    #viewBody{ padding:14px; }
-    #viewBody img{ max-width:100%; border-radius:12px; border:1px solid #ddd; }
-    .kv{ margin:6px 0; }
-    .kv b{ display:inline-block; min-width:90px; color:#000; }
-    .closeBtn{ background:#fff; color:#000; border:1px solid var(--mk-frame); border-radius:10px; padding:6px 10px; font-weight:600; }
-    .btnRow{ display:flex; gap:8px; }
-    body.modal-open{ overflow:hidden; }
+    #viewModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;align-items:center;justify-content:center}
+    #viewCard{background:#fff;max-width:720px;width:94%;border:2px solid var(--mk-frame);border-radius:16px;box-shadow:0 12px 36px rgba(0,0,0,.25);overflow:hidden}
+    #viewHead{background:var(--mk-header-bg);color:#fff;padding:10px 14px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+    #viewBody{padding:14px}
+    #viewBody img{max-width:100%;border-radius:12px;border:1px solid #ddd}
+    .kv{margin:6px 0}
+    .kv b{display:inline-block;min-width:90px;color:#000}
+    .closeBtn{background:#fff;color:#000;border:1px solid var(--mk-frame);border-radius:10px;padding:6px 10px;font-weight:600}
+    .btnRow{display:flex;gap:8px}
+    body.modal-open{overflow:hidden}
   </style>
 </head>
 <body>
@@ -97,11 +72,10 @@
     <div class="frame">
       <div class="hdr"><div class="hdr-title">The Magnolia Room • Events Calendar</div></div>
 
-      <!-- Controls: calendars (auto-built), tags (auto-built), search -->
       <div id="controls">
         <div id="calToggles" aria-label="Calendar sources"></div>
         <div id="tagChips" aria-label="Event tags"></div>
-        <div style="display:flex; gap:8px">
+        <div style="display:flex;gap:8px">
           <input id="q" placeholder="Search events (title or details)" />
           <button id="clearQ" class="btn" type="button">Clear</button>
         </div>
@@ -109,7 +83,6 @@
 
       <div id="calendar"></div>
 
-      <!-- Loader / Error -->
       <div id="overlay" role="status" aria-live="polite">
         <div class="msg" id="overlayMsg">Loading…</div>
         <button id="retryBtn" class="btn" type="button" style="display:none">Retry</button>
@@ -121,12 +94,11 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
   <script>
-    // Utilities
-    function escapeHtml(x){ return (x||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+    // Basic helpers
+    function escapeHtml(x){ return (x||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
     function linkify(t){
-      const esc = (x)=> (x||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-      return esc(t).split(/\s/).map(w => /^https?:\/\/[^\s<>"']+$/i.test(w)
-        ? `<a href="${w}" target="_blank" rel="noopener">${w}</a>` : w).join(' ');
+      const esc=(x)=> (x||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+      return esc(t).split(/\s/).map(w=>/^https?:\/\/[^\s<>"']+$/i.test(w)?`<a href="${w}" target="_blank" rel="noopener">${w}</a>`:w).join(' ');
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -138,10 +110,13 @@
       const calToggles = document.getElementById('calToggles');
       const tagChips = document.getElementById('tagChips');
 
+      // Safer tag regex (no Unicode property escapes)
+      const TAG_RE = /#[A-Za-z0-9_-]+/g;
+
       let currentNeedle = '';
       let selectedTags = new Set();
-      let enabledCals = new Map();   // calKey -> boolean
-      let calColors = {};            // calKey -> color
+      let enabledCals = new Map(); // calKey -> boolean
+      let calColors = {};          // calKey -> color
 
       // Tooltip
       let tipEl = null;
@@ -153,9 +128,7 @@
           <small>${when}</small>
           ${info.event.extendedProps.location ? `<div class="kv"><b>Where:</b> ${escapeHtml(info.event.extendedProps.location)}</div>` : ''}
         `;
-        tipEl = document.createElement('div');
-        tipEl.className = 'mk-tip';
-        tipEl.innerHTML = html;
+        tipEl = document.createElement('div'); tipEl.className='mk-tip'; tipEl.innerHTML=html;
         document.body.appendChild(tipEl);
         const top = Math.max(8, rect.top - tipEl.offsetHeight - 8);
         const left = Math.min(window.innerWidth - tipEl.offsetWidth - 8, Math.max(8, rect.left));
@@ -173,32 +146,48 @@
           overlay.style.display = isLoading ? 'flex' : 'none';
           overlayMsg.textContent = isLoading ? 'Loading…' : '';
           retryBtn.style.display = 'none';
+          // watchdog: if still loading after 15s, show retry
+          if (isLoading) {
+            setTimeout(()=>{
+              if (overlay.style.display === 'flex') {
+                overlayMsg.textContent = 'Taking longer than usual…';
+                retryBtn.style.display = 'inline-block';
+                retryBtn.onclick = ()=> calendar.refetchEvents();
+              }
+            }, 15000);
+          }
         },
 
         events: function (info, success, failure) {
+          // fetch with timeout to avoid hanging forever
+          const controller = new AbortController();
+          const to = setTimeout(()=>controller.abort(), 12000);
           const url = '/.netlify/functions/get-events'
             + '?timeMin=' + encodeURIComponent(info.startStr)
             + '&timeMax=' + encodeURIComponent(info.endStr);
-          fetch(url)
-            .then(r => r.ok ? r.json() : r.text().then(t => Promise.reject(t)))
+
+          fetch(url, { signal: controller.signal })
+            .then(r => r.ok ? r.json() : r.text().then(t => Promise.reject(new Error('HTTP '+r.status+': '+t))))
             .then(payload => {
               const data = payload || {};
-              calColors = data.calColors || calColors;
+              calColors = data.calColors || calColors || {};
               const evts = (data.events || []).map(e => {
-                // derive tags from #hashtags in title/description
-                const txt = ((e.extendedProps?.description)||'') + ' ' + (e.title||'');
-                e.extendedProps.tags = (txt.match(/#[\p{L}\w-]+/gu) || []).map(t => t.toLowerCase());
+                const txt = ((e.extendedProps && e.extendedProps.description) || '') + ' ' + (e.title || '');
+                e.extendedProps = e.extendedProps || {};
+                e.extendedProps.tags = (txt.match(TAG_RE) || []).map(t => t.toLowerCase());
                 return e;
               });
               success(evts);
             })
             .catch(err => {
+              console.error('Events fetch error:', err);
               overlay.style.display = 'flex';
               overlayMsg.textContent = 'Failed to load events.';
               retryBtn.style.display = 'inline-block';
               retryBtn.onclick = ()=> calendar.refetchEvents();
               failure(err);
-            });
+            })
+            .finally(()=> clearTimeout(to));
         },
 
         eventMouseEnter: showTip,
@@ -211,8 +200,7 @@
         },
         eventDidMount: (info) => {
           if (info.event?.title) info.el.title = info.event.title;
-          // Apply per-calendar color (if server provided)
-          const calKey = info.event.extendedProps?.calKey;
+          const calKey = info.event.extendedProps && info.event.extendedProps.calKey;
           if (calKey && calColors[calKey]) {
             info.event.setProp('backgroundColor', calColors[calKey]);
             info.event.setProp('borderColor', calColors[calKey]);
@@ -222,7 +210,7 @@
 
       calendar.render();
 
-      // Mobile view
+      // Mobile view switch
       const setViewForWidth = () => {
         const desired = (window.innerWidth < 640 ? 'listWeek' : 'dayGridMonth');
         if (calendar.view.type !== desired) calendar.changeView(desired);
@@ -230,89 +218,89 @@
       setViewForWidth();
       window.addEventListener('resize', setViewForWidth);
 
-      // iframe height
-      function postHeight() { parent.postMessage({ type: 'mkCalendarHeight', height: document.body.scrollHeight }, '*'); }
-      new ResizeObserver(postHeight).observe(document.body);
+      // iframe height (throttled)
+      function postHeight(){ parent.postMessage({ type:'mkCalendarHeight', height:document.body.scrollHeight }, '*'); }
+      let roPending = false;
+      new ResizeObserver(()=>{ if (!roPending){ roPending = true; requestAnimationFrame(()=>{ roPending=false; postHeight(); }); }}).observe(document.body);
       window.addEventListener('load', postHeight);
-      setTimeout(postHeight, 500);
+      setTimeout(postHeight, 600);
 
-      // Build filters + open by hash when events are set
+      // Build filters + deep-link open
       const eventIndex = new Map();
       calendar.on('eventsSet', (events) => {
-        eventIndex.clear();
-        const cals = new Set();
-        const tags = new Map(); // tag -> count
-        events.forEach(evt => {
-          eventIndex.set(evt.id, evt);
-          const calKey = evt.extendedProps?.calKey || 'default';
-          cals.add(calKey);
-          (evt.extendedProps?.tags||[]).forEach(t => tags.set(t, (tags.get(t)||0)+1));
-        });
+        try {
+          eventIndex.clear();
+          const cals = new Set();
+          const tags = new Map();
+          events.forEach(evt => {
+            eventIndex.set(evt.id, evt);
+            const calKey = (evt.extendedProps && evt.extendedProps.calKey) || 'default';
+            cals.add(calKey);
+            (evt.extendedProps && evt.extendedProps.tags || []).forEach(t => tags.set(t, (tags.get(t)||0)+1));
+          });
 
-        // Calendar toggles (build once, keep states)
-        if (calToggles.childElementCount === 0) {
-          cals.forEach(key => {
-            enabledCals.set(key, true);
-            const color = calColors[key] || '#DE8F05';
-            const b = document.createElement('button');
-            b.className = 'chip';
-            b.type = 'button';
-            b.setAttribute('aria-pressed', 'true');
-            b.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:8px"></span>${escapeHtml(key)}`;
-            b.onclick = () => {
-              const on = b.getAttribute('aria-pressed') !== 'true';
-              b.setAttribute('aria-pressed', on ? 'true' : 'false');
-              enabledCals.set(key, on);
+          // Calendar toggles (build once)
+          if (calToggles.childElementCount === 0) {
+            cals.forEach(key => {
+              if (!enabledCals.has(key)) enabledCals.set(key, true);
+              const color = calColors[key] || '#DE8F05';
+              const b = document.createElement('button');
+              b.className='chip'; b.type='button';
+              b.setAttribute('aria-pressed', enabledCals.get(key) ? 'true' : 'false');
+              b.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:8px"></span>${escapeHtml(key)}`;
+              b.onclick = () => {
+                const on = b.getAttribute('aria-pressed') !== 'true';
+                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                enabledCals.set(key, on);
+                applyFilter();
+              };
+              calToggles.appendChild(b);
+            });
+          }
+
+          // Tag chips (rebuild)
+          tagChips.innerHTML = '';
+          [...tags.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12).forEach(([tag])=>{
+            const chip = document.createElement('button');
+            chip.className='chip'; chip.type='button'; chip.textContent = tag;
+            chip.setAttribute('aria-pressed', selectedTags.has(tag) ? 'true' : 'false');
+            chip.onclick = ()=>{
+              if (selectedTags.has(tag)) { selectedTags.delete(tag); chip.setAttribute('aria-pressed','false'); }
+              else { selectedTags.add(tag); chip.setAttribute('aria-pressed','true'); }
               applyFilter();
             };
-            calToggles.appendChild(b);
+            tagChips.appendChild(chip);
           });
-        }
+          if (tags.size > 0) {
+            const clr = document.createElement('button');
+            clr.className='btn'; clr.type='button'; clr.textContent='Clear tags';
+            clr.onclick = ()=>{ selectedTags.clear(); [...tagChips.querySelectorAll('.chip')].forEach(c=>c.setAttribute('aria-pressed','false')); applyFilter(); };
+            tagChips.appendChild(clr);
+          }
 
-        // Tag chips (rebuild based on current events)
-        tagChips.innerHTML = '';
-        // Top tags by frequency (up to 12)
-        [...tags.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12).forEach(([tag])=>{
-          const chip = document.createElement('button');
-          chip.className = 'chip'; chip.type = 'button';
-          chip.textContent = tag;
-          chip.setAttribute('aria-pressed', selectedTags.has(tag) ? 'true' : 'false');
-          chip.onclick = ()=>{
-            if (selectedTags.has(tag)) { selectedTags.delete(tag); chip.setAttribute('aria-pressed','false'); }
-            else { selectedTags.add(tag); chip.setAttribute('aria-pressed','true'); }
-            applyFilter();
-          };
-          tagChips.appendChild(chip);
-        });
-        if (tags.size > 0) {
-          const clr = document.createElement('button');
-          clr.className = 'btn'; clr.type='button'; clr.textContent='Clear tags';
-          clr.onclick = ()=>{ selectedTags.clear(); [...tagChips.querySelectorAll('.chip')].forEach(c=>c.setAttribute('aria-pressed','false')); applyFilter(); };
-          tagChips.appendChild(clr);
-        }
+          applyFilter();
 
-        // Apply filter after building UI
-        applyFilter();
-
-        // Deep-link open
-        const m = location.hash.match(/^#e=([^&]+)/);
-        if (m) {
-          const id = decodeURIComponent(m[1]);
-          if (eventIndex.has(id)) openEventModal(eventIndex.get(id));
+          // Deep-link open
+          const m = location.hash.match(/^#e=([^&]+)/);
+          if (m) {
+            const id = decodeURIComponent(m[1]);
+            if (eventIndex.has(id)) openEventModal(eventIndex.get(id));
+          }
+        } catch (e) {
+          console.error('eventsSet handler error:', e);
         }
       });
 
-      // Text search filter
       function applyFilter(){
         const needle = currentNeedle;
         const hasTags = selectedTags.size > 0;
         calendar.batchRendering(() => {
           calendar.getEvents().forEach(evt => {
-            const calKey = evt.extendedProps?.calKey || 'default';
+            const calKey = (evt.extendedProps && evt.extendedProps.calKey) || 'default';
             const calOk = enabledCals.get(calKey) !== false;
-            const hay = ((evt.title||'') + ' ' + (evt.extendedProps?.description||'')).toLowerCase();
+            const hay = ((evt.title||'') + ' ' + ((evt.extendedProps && evt.extendedProps.description)||'')).toLowerCase();
             const txtOk = !needle || hay.includes(needle);
-            const tags = evt.extendedProps?.tags || [];
+            const tags = (evt.extendedProps && evt.extendedProps.tags) || [];
             const tagOk = !hasTags || tags.some(t => selectedTags.has(t));
             const visible = calOk && txtOk && tagOk;
             evt.setProp('display', visible ? 'auto' : 'none');
@@ -322,14 +310,12 @@
       q.addEventListener('input', (e)=>{ currentNeedle = e.target.value.trim().toLowerCase(); applyFilter(); });
       clearQ.addEventListener('click', ()=>{ q.value=''; currentNeedle=''; applyFilter(); });
 
-      // Helpers
-      function formatRange(event) {
+      function formatRange(event){
         const s = event.start, e = event.end || event.start;
-        const dOpts = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-        const tOpts = { hour: 'numeric', minute: '2-digit' };
+        const dOpts = { weekday:'short', month:'short', day:'numeric', year:'numeric' };
+        const tOpts = { hour:'numeric', minute:'2-digit' };
         if (event.allDay) {
-          return s.toLocaleDateString(undefined, dOpts)
-            + (e && e > s ? ' – ' + new Date(e.getTime() - 1).toLocaleDateString(undefined, dOpts) : '');
+          return s.toLocaleDateString(undefined, dOpts) + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, dOpts) : '');
         }
         const sStr = s.toLocaleDateString(undefined, dOpts) + ' ' + s.toLocaleTimeString(undefined, tOpts);
         const eStr = e.toLocaleTimeString(undefined, tOpts);
@@ -337,9 +323,9 @@
       }
     });
 
-    // ===== Event Details Modal (global) =====
+    // Modal + SEO + .ics
     let lastFocusEl = null;
-    function openEventModal(event) {
+    function openEventModal(event){
       const modal = document.getElementById('viewModal');
       const title = document.getElementById('viewTitle');
       const body  = document.getElementById('viewBody');
@@ -352,19 +338,16 @@
         const s = event.start, e = event.end || event.start;
         const dOpts = { weekday:'long', month:'long', day:'numeric', year:'numeric' };
         const tOpts = { hour:'numeric', minute:'2-digit' };
-        if (allDay) {
-          return s.toLocaleDateString(undefined, dOpts)
-            + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, dOpts) : '');
-        }
+        if (allDay) { return s.toLocaleDateString(undefined, dOpts) + (e && e > s ? ' – ' + new Date(e.getTime()-1).toLocaleDateString(undefined, dOpts) : ''); }
         const sStr = s.toLocaleDateString(undefined, dOpts) + ' ' + s.toLocaleTimeString(undefined, tOpts);
         const eStr = (e || s).toLocaleTimeString(undefined, tOpts);
         return sStr + ' – ' + eStr;
       })();
 
-      const loc  = event.extendedProps.location ? `<div class="kv"><b>Where:</b> ${escapeHtml(event.extendedProps.location)}</div>` : '';
-      const desc = event.extendedProps.description ? `<div class="kv"><b>Details:</b> ${linkify(event.extendedProps.description)}</div>` : '';
+      const loc  = event.extendedProps && event.extendedProps.location ? `<div class="kv"><b>Where:</b> ${escapeHtml(event.extendedProps.location)}</div>` : '';
+      const desc = event.extendedProps && event.extendedProps.description ? `<div class="kv"><b>Details:</b> ${linkify(event.extendedProps.description)}</div>` : '';
       const flyer = (function(){
-        const f = event.extendedProps.flyer;
+        const f = event.extendedProps && event.extendedProps.flyer;
         if (!f) return '';
         if (/\.(png|jpe?g|webp|gif)$/i.test(f)) return `<div class="kv"><img alt="Flyer" src="${f}"></div>`;
         return `<div class="kv"><a href="${f}" target="_blank" rel="noopener">View flyer</a></div>`;
@@ -373,7 +356,7 @@
 
       body.innerHTML = `<div class="kv"><b>When:</b> ${when}</div>${loc}${desc}${flyer}${gcal}`;
 
-      // JSON-LD for SEO
+      // SEO JSON-LD
       document.querySelectorAll('script[type="application/ld+json"].mk-ld').forEach(n=>n.remove());
       const ld = {
         "@context":"https://schema.org",
@@ -382,25 +365,20 @@
         "startDate": event.start.toISOString(),
         "endDate": (event.end||event.start).toISOString(),
         "eventAttendanceMode":"https://schema.org/OfflineEventAttendanceMode",
-        "location": event.extendedProps?.location ? { "@type":"Place", "name": event.extendedProps.location } : undefined,
-        "description": event.extendedProps?.description || "",
-        "image": event.extendedProps?.flyer ? [event.extendedProps.flyer] : undefined,
+        "location": event.extendedProps && event.extendedProps.location ? { "@type":"Place", "name": event.extendedProps.location } : undefined,
+        "description": (event.extendedProps && event.extendedProps.description) || "",
+        "image": (event.extendedProps && event.extendedProps.flyer) ? [event.extendedProps.flyer] : undefined,
         "url": location.href.split('#')[0] + '#e=' + encodeURIComponent(event.id)
       };
-      const s = document.createElement('script');
-      s.type = 'application/ld+json'; s.className='mk-ld';
-      s.textContent = JSON.stringify(ld);
-      document.head.appendChild(s);
+      const s = document.createElement('script'); s.type='application/ld+json'; s.className='mk-ld'; s.textContent = JSON.stringify(ld); document.head.appendChild(s);
 
-      // Buttons and open
       const closeBtn = document.getElementById('viewClose');
       const icsBtn   = document.getElementById('viewIcs');
 
       modal.style.display = 'flex';
       document.body.classList.add('modal-open');
 
-      // Focus management + trap
-      const focusables = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const focusables = modal.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
       (icsBtn || closeBtn)?.focus();
       modal.onkeydown = (e)=>{
         if (e.key === 'Escape') { closeModal(); }
@@ -410,7 +388,6 @@
           else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
         }
       };
-
       closeBtn.onclick = () => closeModal();
       modal.onclick = (e) => { if (e.target === modal) closeModal(); };
       icsBtn && (icsBtn.onclick = () => saveIcsForEvent(event));
@@ -421,25 +398,14 @@
       document.body.classList.remove('modal-open');
       if (lastFocusEl) { try { lastFocusEl.focus(); } catch(_){} }
     }
-
-    // .ICS helper
     function saveIcsForEvent(evt){
-      const pad = (n)=> String(n).padStart(2,'0');
-      const fmtUTC = (d)=> {
-        const z = new Date(d.getTime() - d.getTimezoneOffset()*60000);
-        return z.getUTCFullYear()
-          + pad(z.getUTCMonth()+1) + pad(z.getUTCDate()) + 'T'
-          + pad(z.getUTCHours()) + pad(z.getUTCMinutes()) + pad(z.getUTCSeconds()) + 'Z';
-      };
-      let dtStart, dtEnd, allday = '';
-      if (evt.allDay) {
-        dtStart = evt.start.toISOString().slice(0,10).replace(/-/g,'');
-        const endDate = (evt.end || evt.start).toISOString().slice(0,10).replace(/-/g,'');
-        dtEnd   = endDate; allday = ';VALUE=DATE';
-      } else { dtStart = fmtUTC(evt.start); dtEnd = fmtUTC(evt.end || evt.start); }
-      const uid = (evt.id || (Date.now()+'@magnolia'));
-      const ics =
-`BEGIN:VCALENDAR
+      const pad=(n)=>String(n).padStart(2,'0');
+      const fmtUTC=(d)=>{ const z=new Date(d.getTime()-d.getTimezoneOffset()*60000); return z.getUTCFullYear()+pad(z.getUTCMonth()+1)+pad(z.getUTCDate())+'T'+pad(z.getUTCHours())+pad(z.getUTCMinutes())+pad(z.getUTCSeconds())+'Z'; };
+      let dtStart,dtEnd,allday='';
+      if (evt.allDay){ dtStart=evt.start.toISOString().slice(0,10).replace(/-/g,''); const endDate=(evt.end||evt.start).toISOString().slice(0,10).replace(/-/g,''); dtEnd=endDate; allday=';VALUE=DATE'; }
+      else { dtStart=fmtUTC(evt.start); dtEnd=fmtUTC(evt.end||evt.start); }
+      const uid=(evt.id|| (Date.now()+'@magnolia'));
+      const ics=`BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//The Magnolia Room//Calendar//EN
 CALSCALE:GREGORIAN
@@ -449,19 +415,16 @@ UID:${uid}
 SUMMARY:${(evt.title||'').replace(/\n/g,' ')}
 DTSTART${allday}:${dtStart}
 DTEND${allday}:${dtEnd}
-LOCATION:${(evt.extendedProps?.location||'').replace(/\n/g,' ')}
-DESCRIPTION:${(evt.extendedProps?.description||'').replace(/\n/g,' ')}
+LOCATION:${((evt.extendedProps&&evt.extendedProps.location)||'').replace(/\n/g,' ')}
+DESCRIPTION:${((evt.extendedProps&&evt.extendedProps.description)||'').replace(/\n/g,' ')}
 END:VEVENT
 END:VCALENDAR`;
-      const blob = new Blob([ics], { type: 'text/calendar' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = (evt.title || 'event') + '.ics';
-      document.body.appendChild(a); a.click(); a.remove();
+      const blob=new Blob([ics],{type:'text/calendar'}); const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob); a.download=(evt.title||'event')+'.ics'; document.body.appendChild(a); a.click(); a.remove();
     }
   </script>
 
-  <!-- Event Details Modal -->
+  <!-- Modal -->
   <div id="viewModal" role="dialog" aria-modal="true" aria-labelledby="viewTitle">
     <div id="viewCard">
       <div id="viewHead">
